@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendario 2026–2027</title>
+<style>
+  :root{
+    --bg:#06080d; --panel:#0c111b; --panel2:#111a2b; --line:#1b2740;
+    --text:#d7deea; --muted:#7b8aa5; --accent:#4f7cc9; --accent2:#2a4a85;
+    --examen:#c46a78; --actividad:#4f7cc9; --entrega:#c9a35a; --festivo:#6fa3b8; --libre:#8a94a8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(1200px 600px at 20% -10%,#0f1c36 0%,var(--bg) 60%);color:var(--text);
+    font-family:"Inter","Segoe UI",system-ui,sans-serif;min-height:100vh;padding:28px 20px 60px;letter-spacing:.2px}
+  #bg{position:fixed;inset:0;z-index:-1;background:center/cover no-repeat;display:none}
+  #bg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,13,.72),rgba(8,14,28,.88))}
+  body.hasbg #bg{display:block}
+  body.hasbg .cal,body.hasbg .box{background:color-mix(in srgb,var(--panel) 78%,transparent);backdrop-filter:blur(8px)}
+  body.hasbg .day.out{background:rgba(8,11,18,.5)}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+  h1{font-weight:300;font-size:1.9rem;letter-spacing:3px;text-transform:uppercase}
+  h1 span{color:var(--accent);font-weight:500}
+  .sub{color:var(--muted);font-size:.8rem;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+  .tools{display:flex;gap:8px;flex-wrap:wrap}
+  button{font:inherit;cursor:pointer;color:var(--text);background:var(--panel2);border:1px solid var(--line);
+    padding:8px 14px;border-radius:6px;font-size:.8rem;letter-spacing:1px;transition:.2s}
+  button:hover{border-color:var(--accent);color:#fff}
+  button{user-select:none;-webkit-user-select:none}
+  button:disabled{opacity:.4;cursor:default}
+  button.primary{background:var(--accent2);border-color:var(--accent)}
+  button.danger{color:var(--examen)}
+  .tabs{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;border-radius:0;color:var(--muted);
+    padding:8px 12px;font-size:.75rem;text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
+  .tab.active{color:#fff;border-bottom-color:var(--accent)}
+  .layout{display:grid;grid-template-columns:1fr 280px;gap:20px}
+  .cal{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .calhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+  .calhead h2{font-weight:300;font-size:1.3rem;letter-spacing:4px;text-transform:uppercase;text-align:center}
+  .nav button{padding:6px 12px}
+  .dow,.grid{display:grid;grid-template-columns:repeat(7,1fr)}
+  .dow div{padding:10px 6px;text-align:center;font-size:.68rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--line)}
+  .day{min-height:104px;padding:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s;position:relative;min-width:0}
+  .day:nth-child(7n){border-right:none}
+  .day:hover{background:var(--panel2)}
+  .day.out{background:#080b12;cursor:default;opacity:.35}
+  .day.out:hover{background:#080b12}
+  .num{font-size:.78rem;color:var(--muted);display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%}
+  .day.today .num{background:var(--accent);color:#fff}
+  .day.weekend .num{color:#5d6b86}
+  .day.off{background:linear-gradient(180deg,rgba(111,163,184,.10),rgba(111,163,184,.03))}
+  .day.libre{background:linear-gradient(180deg,rgba(138,148,168,.10),rgba(138,148,168,.03))}
+  .chip{display:block;margin-top:3px;padding:2px 6px;border-radius:4px;font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);color:#e6ecf7}
+  .chip.examen{--c:var(--examen)} .chip.actividad{--c:var(--actividad)} .chip.entrega{--c:var(--entrega)}
+  .chip.festivo{--c:var(--festivo)} .chip.libre{--c:var(--libre)}
+  .chip .cs{margin-left:4px;color:var(--dc)}
+  .chip.past{background:#fff;color:#000;border-left-color:#000}
+  .chip .sd{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;background:var(--sc);vertical-align:middle}
+  .chip.past .cs{color:#000}
+  aside{display:flex;flex-direction:column;gap:16px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .box h3{font-weight:400;font-size:.72rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .legend div{display:flex;align-items:center;gap:10px;font-size:.8rem;margin:7px 0;color:var(--text)}
+  .dot{width:10px;height:10px;border-radius:2px;flex:none}
+  .legend .past{display:flex}
+  .legend .dot.w{background:#fff}
+  .up{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem;cursor:pointer;align-items:baseline}
+  .up:last-child{border:none}
+  .up .d{color:var(--muted);min-width:52px;font-variant-numeric:tabular-nums}
+  .up .s{margin-left:auto;font-size:.7rem;white-space:nowrap}
+  .empty,.muted{color:var(--muted);font-size:.8rem}
+  .note{color:var(--muted);font-size:.72rem;line-height:1.5}
+  dialog{margin:auto;background:var(--panel);color:var(--text);border:1px solid var(--accent2);border-radius:12px;padding:24px;width:min(520px,94vw);max-height:92vh;overflow:auto}
+  dialog.big{width:min(700px,94vw)}
+  dialog::backdrop{background:rgba(0,0,0,.65);backdrop-filter:blur(3px)}
+  dialog h3{font-weight:300;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;font-size:1rem}
+  label{display:block;font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
+  input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:6px;font:inherit;font-size:.85rem}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+  /* estrellas */
+  .stars{display:inline-flex;gap:2px}
+  .star{background:none;border:none;padding:2px 1px;font-size:1.45rem;line-height:1;color:#2c3a58;letter-spacing:0}
+  .star.on{color:var(--dc)}
+  .star:hover{color:var(--dc,#fff);transform:scale(1.15)}
+  .dname{font-weight:600;color:var(--dc);font-size:.9rem}
+  /* detalle del día */
+  .vdate{color:var(--muted);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+  #vTitle{margin-bottom:18px}
+  .ev{border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:16px;margin-bottom:14px;
+    background:color-mix(in srgb,var(--c) 8%,var(--panel2))}
+  .evtop{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.68rem;letter-spacing:2px;text-transform:uppercase}
+  .tag{color:var(--c);font-weight:600}
+  .rng{color:var(--muted)}
+  .ev h4{font-weight:500;font-size:1.25rem;margin:8px 0;line-height:1.25;word-break:break-word}
+  .desc{white-space:pre-wrap;line-height:1.55;font-size:.9rem;word-break:break-word}
+  .diff{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+  .dh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lbl{font-size:.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  .why{margin-top:6px;font-size:.85rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .evact{margin-top:14px;text-align:right}
+  .ev.hs{--c:var(--sc);background:linear-gradient(rgba(8,12,22,.72),rgba(8,12,22,.9)),var(--img,none) center/cover,color-mix(in srgb,var(--sc) 12%,var(--panel2))}
+  .ev.past{background:#fff;color:#000;border-color:#fff;border-left-color:#000}
+  .ev.past .muted,.ev.past .lbl,.ev.past .rng{color:#444}
+  .ev.past .tag{color:#000}
+  .ev.past.hs{border-left-color:var(--sc)}
+  .ev.past .star{color:#bbb}.ev.past .star.on{color:#000}
+  .ev.past .dname{color:#000}
+  .ev.past button:not(.star){background:#eee;color:#000;border-color:#999}
+  #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent2);padding:10px 18px;border-radius:6px;font-size:.8rem;opacity:0;pointer-events:none;transition:.3s;z-index:99;max-width:92vw;text-align:center}
+  #toast.show{opacity:1}
+  @media(max-width:860px){
+    .layout{grid-template-columns:1fr}
+    .day{min-height:68px;padding:4px}
+    .chip{font-size:0;height:6px;padding:0;border-left:none;background:var(--c);border-radius:3px;margin-top:2px}
+    .chip.past{background:#fff}
+    .chip .sd{display:none}
+    h1{font-size:1.4rem}
+    .calhead{padding:12px}.calhead h2{font-size:1rem;letter-spacing:2px}
+  }
+  @media(max-width:480px){
+    body{padding:18px 10px 50px}
+    .tools{width:100%}.tools button{flex:1 1 auto;padding:8px 8px;font-size:.72rem}
+    .day{min-height:58px;padding:3px}
+    .num{font-size:.7rem;min-width:20px;height:20px;line-height:20px}
+    .dow div{padding:8px 0;letter-spacing:0;font-size:.6rem}
+    dialog{padding:16px}
+    .row{grid-template-columns:1fr}
+    .star{font-size:1.7rem;padding:2px 3px}
+    .actions button{flex:1 1 auto}
+  }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Calendario <span>26·27</span></h1>
+      <div class="sub">Noviembre 2026 — Junio 2027</div>
+    </div>
+    <div class="tools">
+      <button class="primary" id="addBtn">+ Nuevo evento</button>
+      <button id="todayBtn" title="Cambiar el día de hoy">Hoy</button>
+      <button id="bgBtn">Fondo</button>
+      <button id="bgClear" hidden>Quitar fondo</button>
+      <button id="exportBtn">Exportar</button>
+      <button id="importBtn">Importar</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <input type="file" id="bgFile" accept="image/*" hidden>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="layout">
+    <section class="cal">
+      <div class="calhead">
+        <div class="nav"><button id="prev">←</button></div>
+        <h2 id="monthTitle"></h2>
+        <div class="nav"><button id="next">→</button></div>
+      </div>
+      <div class="dow"><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <aside>
+      <div class="box legend">
+        <h3>Leyenda</h3>
+        <div><span class="dot" style="background:var(--examen)"></span>Examen</div>
+        <div><span class="dot" style="background:var(--actividad)"></span>Actividad</div>
+        <div><span class="dot" style="background:var(--entrega)"></span>Entrega</div>
+        <div><span class="dot" style="background:var(--festivo)"></span>Festivo</div>
+        <div><span class="dot" style="background:var(--libre)"></span>Día libre</div>
+        <div><span class="dot w"></span>Ya pasó</div>
+      </div>
+      <div class="box legend">
+        <h3>Materias</h3>
+        <div id="subjList"></div>
+      </div>
+      <div class="box">
+        <h3>Próximos</h3>
+        <div id="upcoming"></div>
+      </div>
+      <div class="box note">
+        Los datos (y el fondo) se guardan automáticamente en este navegador. Para no perderlos nunca o usarlos en otro dispositivo, usa <b>Exportar</b> y guarda el JSON (por ejemplo en tu repo).
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- ¿Qué día es hoy? -->
+<dialog id="todayDlg">
+  <form method="dialog" id="todayForm">
+    <h3>¿Qué día es hoy?</h3>
+    <p class="note">Así sé qué eventos ya pasaron y te ubico en el calendario.</p>
+    <label>Fecha de hoy</label>
+    <input type="date" id="fToday" required>
+    <div class="actions"><button type="button" class="primary" id="todayOk">Continuar</button></div>
+  </form>
+</dialog>
+
+<!-- Detalle del día -->
+<dialog id="viewDlg" class="big">
+  <div class="vdate" id="vSub"></div>
+  <h3 id="vTitle"></h3>
+  <div id="vBody"></div>
+  <div class="actions">
+    <button type="button" id="vAdd" class="primary">+ Añadir evento</button>
+    <button type="button" id="vClose">Cerrar</button>
+  </div>
+</dialog>
+
+<!-- Crear / editar -->
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h3 id="dlgTitle">Nuevo evento</h3>
+    <label>Título</label>
+    <input id="fTitle" required maxlength="80" placeholder="Ej: Examen de Cálculo">
+    <label>Tipo</label>
+    <select id="fType">
+      <option value="examen">Examen</option>
+      <option value="actividad">Actividad</option>
+      <option value="entrega">Entrega</option>
+      <option value="festivo">Festivo</option>
+      <option value="libre">Día libre</option>
+    </select>
+    <label>Materia</label>
+    <select id="fSubj"></select>
+    <div class="dh" style="margin-top:8px">
+      <button type="button" id="sImgBtn">Imagen de la materia</button>
+      <button type="button" id="sImgDef">Por defecto</button>
+      <span class="muted" id="sImgSt"></span>
+    </div>
+    <input type="file" id="sImgFile" accept="image/*" hidden>
+    <div class="row">
+      <div><label>Desde</label><input type="date" id="fStart" required min="2026-11-01" max="2027-06-30"></div>
+      <div><label>Hasta (opcional)</label><input type="date" id="fEnd" min="2026-11-01" max="2027-06-30"></div>
+    </div>
+    <label>Descripción</label>
+    <textarea id="fNote" rows="4" maxlength="1500" placeholder="Explica bien de qué trata el evento…"></textarea>
+    <label>Dificultad</label>
+    <div class="dh"><span class="stars" id="fStars"></span><span class="dname" id="fDiffName"></span></div>
+    <label>¿Por qué esa dificultad?</label>
+    <textarea id="fDiffNote" rows="2" maxlength="500" placeholder="Breve explicación de por qué la elegiste"></textarea>
+    <div class="actions">
+      <button type="button" class="danger" id="delBtn">Eliminar</button>
+      <button type="button" id="cancelBtn">Cancelar</button>
+      <button type="submit" class="primary" id="saveBtn">Guardar</button>
+    </div>
+  </form>
+</dialog>
+<div id="toast"></div>
+
+<script>
+/* ========= DATOS INICIALES =========
+   Solo se usan la primera vez (cuando no hay nada guardado).
+   Revisa los festivos: pueden variar según tu comunidad autónoma. */
+const SEED = [
+  {id:"s1", start:"2026-12-08", end:"", title:"Inmaculada Concepción", type:"festivo", note:""},
+  {id:"s2", start:"2026-12-25", end:"", title:"Navidad", type:"festivo", note:""},
+  {id:"s3", start:"2027-01-01", end:"", title:"Año Nuevo", type:"festivo", note:""},
+  {id:"s4", start:"2027-01-06", end:"", title:"Reyes Magos", type:"festivo", note:""},
+  {id:"s5", start:"2027-03-26", end:"", title:"Viernes Santo", type:"festivo", note:""}
+];
+const STORAGE_KEY = "calendario-2026-2027-v2";
+const OLD_KEY = "calendario-2026-2027-v1";
+
+const MONTHS = [[2026,10],[2026,11],[2027,0],[2027,1],[2027,2],[2027,3],[2027,4],[2027,5]];
+const NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const SHORT = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const WD = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const TYPES = {examen:"Examen",actividad:"Actividad",entrega:"Entrega",festivo:"Festivo",libre:"Día libre"};
+const DIFF = {1:"Easy peasy",2:"Chill my bro",3:"No tan easy",4:"La cebolla",5:"we’re so cooked"};
+const DCOL = {1:"#6fb38a",2:"#6fa3b8",3:"#c9a35a",4:"#d9885a",5:"#c46a78"};
+
+const SUBJ = {
+  prog:{n:"Programación",c:"#e8639a",g:"</>"},
+  bd:{n:"Bases de datos",c:"#9b7de8",g:"SQL"},
+  sis:{n:"Sistemas Informáticos",c:"#4fc3dc",g:">_"},
+  ent:{n:"Entorno Desarrollo",c:"#f29b3d",g:"{ }"},
+  lm:{n:"Lenguajes de marcas y sistemas de gestión de información",c:"#e6c943",g:"</html>"},
+  dig:{n:"Digitalización Aplicada a los Sectores Productivos",c:"#5fcf8f",g:"01"},
+  sos:{n:"Sostenibilidad Aplicada al Sistema Productivo",c:"#9bd45c",g:"ECO"},
+  ipe:{n:"Itinerario Personal para la Empleabilidad",c:"#7a62c9",g:"IPE"}
+};
+const dflt = {};
+function defaultImg(k){
+  if(dflt[k]) return dflt[k];
+  const s=SUBJ[k];
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='800' height='400' viewBox='0 0 800 400'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${s.c}' stop-opacity='.55'/><stop offset='1' stop-color='#0a0f1c'/></linearGradient><pattern id='p' width='28' height='28' patternUnits='userSpaceOnUse'><path d='M28 0H0V28' fill='none' stroke='#fff' stroke-opacity='.06'/></pattern></defs><rect width='800' height='400' fill='url(#g)'/><rect width='800' height='400' fill='url(#p)'/><text x='770' y='330' text-anchor='end' font-family='monospace' font-weight='700' font-size='170' fill='#fff' fill-opacity='.12'>${esc(s.g)}</text></svg>`;
+  return dflt[k]="data:image/svg+xml,"+encodeURIComponent(svg);
+}
+const subjImg = k => simgs[k] || defaultImg(k);
+function shrink(file,max,q,cb){
+  const url=URL.createObjectURL(file), img=new Image();
+  img.onload=()=>{
+    const s=Math.min(1,max/Math.max(img.width,img.height));
+    const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(url); cb(c.toDataURL("image/jpeg",q));
+  };
+  img.onerror=()=>toast("No se pudo leer la imagen");
+  img.src=url;
+}
+
+const $ = id => document.getElementById(id);
+const norm = e => ({id:"x"+Math.random().toString(36).slice(2),end:"",note:"",diff:0,diffNote:"",subject:"",...e,diff:Math.max(0,Math.min(5,+e.diff||0))});
+
+const L = load();
+let events = L.events, bg = L.bg, simgs = L.simgs;
+let today = "";        // se pregunta siempre al iniciar
+let cur = 0;
+let editingId = null, viewDate = null, formDiff = 0, fromView = false;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(OLD_KEY);
+    if(raw){
+      const p = JSON.parse(raw);
+      if(Array.isArray(p)) return {events:p.map(norm), bg:"", simgs:{}};
+      if(p && Array.isArray(p.events)) return {events:p.events.map(norm), bg:p.bg||"", simgs:p.simgs||{}};
+    }
+  }catch(e){}
+  return {events:SEED.map(norm), bg:"", simgs:{}};
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({events,bg,simgs})); }
+  catch(e){ toast("No se pudo guardar en el navegador. Usa Exportar."); }
+}
+function iso(y,m,d){ return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
+function isoDate(d){ return iso(d.getFullYear(),d.getMonth(),d.getDate()); }
+function fmt(s){ const [,m,d]=s.split("-"); return `${+d} ${SHORT[+m-1]}`; }
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),2400); }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function eventsOn(date){ return events.filter(e => e.start <= date && date <= (e.end || e.start)); }
+const isPast = e => (e.end||e.start) < today;
+const monthIdx = s => MONTHS.findIndex(([y,m])=>s.startsWith(`${y}-${String(m+1).padStart(2,"0")}`));
+const dc = n => `--dc:${DCOL[n]||"#fff"}`;
+
+function stars(n,id){
+  return `<span class="stars">`+[1,2,3,4,5].map(i=>`<button type="button" class="star ${i<=n?"on":""}" data-star="${i}" data-id="${id}" aria-label="${i} estrellas">★</button>`).join("")+`</span>`;
+}
+
+/* ---------- Render principal ---------- */
+function render(){
+  const [y,m] = MONTHS[cur];
+  $("monthTitle").textContent = `${NAMES[m]} ${y}`;
+  $("prev").disabled = cur===0;
+  $("next").disabled = cur===MONTHS.length-1;
+  if(today){ const [,tm,td]=today.split("-"); $("todayBtn").textContent=`Hoy: ${+td} ${SHORT[+tm-1]}`; }
+
+  const tabs = $("tabs");
+  tabs.innerHTML = MONTHS.map(([yy,mm],i)=>`<button class="tab ${i===cur?"active":""}" data-i="${i}">${SHORT[mm]} ${String(yy).slice(2)}</button>`).join("");
+  tabs.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{cur=+b.dataset.i;render();});
+
+  const first = (new Date(y,m,1).getDay()+6)%7;
+  const days = new Date(y,m+1,0).getDate();
+  const prevDays = new Date(y,m,0).getDate();
+  let html="";
+  const total = Math.ceil((first+days)/7)*7;
+  for(let i=0;i<total;i++){
+    const dn = i-first+1;
+    if(dn<1 || dn>days){
+      html+=`<div class="day out"><span class="num">${dn<1?prevDays+dn:dn-days}</span></div>`; continue;
+    }
+    const date = iso(y,m,dn);
+    const evs = eventsOn(date);
+    const cls = ["day"];
+    if(date===today) cls.push("today");
+    if(i%7>=5) cls.push("weekend");
+    if(evs.some(e=>e.type==="festivo")) cls.push("off");
+    else if(evs.some(e=>e.type==="libre")) cls.push("libre");
+    html+=`<div class="${cls.join(" ")}" data-date="${date}"><span class="num">${dn}</span>`+
+      evs.map(e=>`<span class="chip ${e.type} ${isPast(e)?"past":""}" style="${dc(e.diff)}" title="${esc(e.title)}">${SUBJ[e.subject]?`<i class="sd" style="--sc:${SUBJ[e.subject].c}"></i>`:""}${esc(e.title)}${e.diff?`<span class="cs">★${e.diff}</span>`:""}</span>`).join("")+`</div>`;
+  }
+  const grid=$("grid"); grid.innerHTML=html;
+  grid.querySelectorAll(".day:not(.out)").forEach(c=>c.onclick=()=>openView(c.dataset.date));
+  renderUpcoming();
+}
+
+function renderUpcoming(){
+  const list = events.filter(e=>!isPast(e) && e.type!=="festivo").sort((a,b)=>a.start.localeCompare(b.start)).slice(0,6);
+  const box = $("upcoming");
+  if(!list.length){ box.innerHTML='<div class="empty">Nada pendiente.</div>'; return; }
+  box.innerHTML = list.map(e=>`<div class="up" data-id="${e.id}"><span class="d">${fmt(e.start)}</span><span>${esc(e.title)}</span>${e.diff?`<span class="s" style="${dc(e.diff)};color:var(--dc)">${"★".repeat(e.diff)}</span>`:""}</div>`).join("");
+  box.querySelectorAll(".up").forEach(u=>u.onclick=()=>{
+    const ev = events.find(x=>x.id===u.dataset.id);
+    const idx = monthIdx(ev.start);
+    if(idx>=0){cur=idx;render();}
+    openView(ev.start);
+  });
+}
+
+/* ---------- Detalle del día ---------- */
+function evCard(e){
+  const past = isPast(e);
+  const rng = e.end ? `${fmt(e.start)} → ${fmt(e.end)}` : fmt(e.start);
+  const showD = e.diff>0 || ["examen","actividad","entrega"].includes(e.type);
+  const sj = SUBJ[e.subject];
+  return `<article class="ev ${past?"past":""} ${sj?"hs":""}" data-ev="${e.id}" style="${sj?`--sc:${sj.c}`:`--c:var(--${e.type})`}">
+    <div class="evtop"><span class="tag">${TYPES[e.type]||esc(e.type)}${sj?` · ${sj.n}`:""}</span><span class="rng">${rng}${past?" · ya pasó":""}</span></div>
+    <h4>${esc(e.title)}</h4>
+    <p class="desc ${e.note?"":"muted"}">${e.note?esc(e.note):"Sin descripción todavía."}</p>
+    ${showD?`<div class="diff" style="${dc(e.diff)}">
+      <div class="dh"><span class="lbl">Dificultad</span>${stars(e.diff,e.id)}<span class="dname">${e.diff?`${e.diff}/5 · ${DIFF[e.diff]}`:"Sin asignar"}</span></div>
+      <p class="why ${e.diffNote?"":"muted"}">${e.diffNote?esc(e.diffNote):"Sin explicación de la dificultad."}</p>
+    </div>`:""}
+    <div class="evact"><button type="button" data-edit="${e.id}">Editar</button></div>
+  </article>`;
+}
+function openView(date){
+  viewDate = date;
+  const [y,m,d] = date.split("-").map(Number);
+  const evs = eventsOn(date);
+  $("vSub").textContent = WD[new Date(y,m-1,d).getDay()];
+  $("vTitle").textContent = `${d} de ${NAMES[m-1]} de ${y}`;
+  $("vBody").innerHTML = evs.length ? evs.map(evCard).join("") : '<p class="muted" style="margin-bottom:6px">No hay eventos este día.</p>';
+  $("vBody").querySelectorAll("[data-ev]").forEach(a=>{
+    const ev=events.find(x=>x.id===a.dataset.ev);
+    if(ev && SUBJ[ev.subject]) a.style.setProperty("--img",`url("${subjImg(ev.subject)}")`);
+  });
+  if(dlg.open) dlg.close();
+  if(!viewDlg.open) viewDlg.showModal();
+}
+$("vBody").onclick = e=>{
+  const s = e.target.closest("[data-star]");
+  if(s){
+    const ev = events.find(x=>x.id===s.dataset.id); if(!ev) return;
+    const n = +s.dataset.star; ev.diff = ev.diff===n?0:n;
+    save(); render(); openView(viewDate); return;
+  }
+  const b = e.target.closest("[data-edit]");
+  if(b) openDlg(b.dataset.edit, null, true);
+};
+$("vAdd").onclick = ()=>openDlg(null, viewDate, true);
+$("vClose").onclick = ()=>viewDlg.close();
+viewDlg.addEventListener("click", e=>{ if(e.target===viewDlg) viewDlg.close(); });
+
+/* ---------- Crear / editar ---------- */
+function drawFormStars(){
+  $("fStars").innerHTML = stars(formDiff,"").replace(/^<span class="stars">|<\/span>$/g,"");
+  $("fStars").style.setProperty("--dc", DCOL[formDiff]||"#fff");
+  $("fDiffName").style.setProperty("--dc", DCOL[formDiff]||"#7b8aa5");
+  $("fDiffName").textContent = formDiff ? `${formDiff}/5 · ${DIFF[formDiff]}` : "Sin asignar";
+}
+$("fStars").onclick = e=>{
+  const b = e.target.closest("[data-star]"); if(!b) return;
+  const n = +b.dataset.star; formDiff = formDiff===n?0:n; drawFormStars();
+};
+function updateSImg(){
+  const k=fSubj.value;
+  sImgBtn.disabled=sImgDef.disabled=!k;
+  sImgDef.disabled=!k||!simgs[k];
+  sImgSt.textContent = !k ? "Elige una materia (la imagen se aplica a toda la materia)" : (simgs[k]?"Imagen personalizada":"Imagen por defecto");
+}
+fSubj.innerHTML='<option value="">— Ninguna —</option>'+Object.entries(SUBJ).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("");
+$("subjList").innerHTML=Object.values(SUBJ).map(v=>`<div><span class="dot" style="background:${v.c}"></span>${v.n}</div>`).join("");
+fSubj.onchange=updateSImg;
+sImgBtn.onclick=()=>sImgFile.click();
+sImgDef.onclick=()=>{ delete simgs[fSubj.value]; save(); updateSImg(); toast("Imagen por defecto"); };
+sImgFile.onchange=e=>{
+  const f=e.target.files[0]; e.target.value=""; const k=fSubj.value; if(!f||!k) return;
+  shrink(f,1000,.75,d=>{ simgs[k]=d; save(); updateSImg(); toast("Imagen de la materia guardada"); });
+};
+function openDlg(id,date,fv){
+  editingId=id; fromView=!!fv;
+  const ev = id ? events.find(e=>e.id===id) : null;
+  $("dlgTitle").textContent = ev?"Editar evento":"Nuevo evento";
+  fTitle.value = ev?ev.title:"";
+  fType.value = ev?ev.type:"actividad";
+  fSubj.value = ev&&SUBJ[ev.subject]?ev.subject:""; updateSImg();
+  const [y,m]=MONTHS[cur];
+  fStart.value = ev?ev.start:(date||iso(y,m,1));
+  fEnd.value = ev?ev.end:"";
+  fNote.value = ev?ev.note:"";
+  fDiffNote.value = ev?ev.diffNote:"";
+  formDiff = ev?ev.diff:0; drawFormStars();
+  delBtn.style.display = ev?"":"none";
+  if(viewDlg.open) viewDlg.close();
+  dlg.showModal();
+}
+$("addBtn").onclick=()=>openDlg(null);
+$("cancelBtn").onclick=()=>{ dlg.close(); if(fromView && viewDate) openView(viewDate); };
+$("delBtn").onclick=()=>{
+  if(confirm("¿Eliminar este evento?")){
+    events=events.filter(e=>e.id!==editingId); save(); dlg.close(); render();
+    if(fromView && viewDate) openView(viewDate);
+  }
+};
+$("form").onsubmit=e=>{
+  e.preventDefault();
+  let end=fEnd.value; if(end && end<fStart.value) end=fStart.value;
+  const data={title:fTitle.value.trim(),type:fType.value,start:fStart.value,end:end===fStart.value?"":end,
+    note:fNote.value.trim(),subject:fSubj.value,diff:formDiff,diffNote:fDiffNote.value.trim()};
+  if(!data.title) return;
+  if(editingId){ Object.assign(events.find(x=>x.id===editingId),data); }
+  else events.push({id:"e"+Date.now().toString(36)+Math.random().toString(36).slice(2,5),...data});
+  save(); dlg.close();
+  const idx = monthIdx(data.start); if(idx>=0) cur=idx;
+  render(); toast("Guardado");
+  if(fromView) openView(data.start);
+};
+
+$("prev").onclick=()=>{if(cur>0){cur--;render();}};
+$("next").onclick=()=>{if(cur<MONTHS.length-1){cur++;render();}};
+
+/* ---------- Hoy ---------- */
+function askToday(){
+  fToday.value = today || isoDate(new Date());
+  if(viewDlg.open) viewDlg.close();
+  todayDlg.showModal();
+}
+todayDlg.addEventListener("cancel", e=>{ if(!today) e.preventDefault(); });
+function confirmToday(){
+  if(!fToday.value){ toast("Elige una fecha"); return; }
+  today = fToday.value; todayDlg.close();
+  const i = monthIdx(today);
+  cur = i>=0 ? i : (today<"2026-11-01" ? 0 : MONTHS.length-1);
+  render();
+}
+$("todayForm").onsubmit=e=>{ e.preventDefault(); confirmToday(); };
+$("todayOk").onclick=confirmToday;
+fToday.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); confirmToday(); } };
+$("todayBtn").onclick = askToday;
+
+/* ---------- Fondo ---------- */
+function applyBg(){
+  $("bg").style.backgroundImage = bg ? `url("${bg}")` : "";
+  document.body.classList.toggle("hasbg", !!bg);
+  $("bgClear").hidden = !bg;
+}
+$("bgBtn").onclick=()=>$("bgFile").click();
+$("bgClear").onclick=()=>{ bg=""; applyBg(); save(); toast("Fondo quitado"); };
+$("bgFile").onchange=e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  shrink(f,1600,.8,d=>{ bg=d; applyBg(); save(); toast("Fondo aplicado"); });
+};
+
+/* ---------- Exportar / Importar ---------- */
+$("exportBtn").onclick=()=>{
+  const out={version:3,exportado:new Date().toISOString(),events,bg,simgs};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="calendario-eventos.json"; a.click();
+  URL.revokeObjectURL(a.href); toast("Exportado");
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      let p=JSON.parse(r.result), list=p, newBg=bg, newS=simgs;
+      if(!Array.isArray(p)){ list=p.events; newBg=p.bg||""; newS=p.simgs||{}; }
+      if(!Array.isArray(list)||!list.every(x=>x.start&&x.title&&x.type)) throw 0;
+      if(confirm("Esto reemplazará los eventos actuales. ¿Continuar?")){
+        events=list.map(norm); bg=newBg; simgs=newS; save(); applyBg(); render(); toast("Importado");
+      }
+    }catch(_){ toast("Archivo no válido"); }
+    e.target.value="";
+  };
+  r.readAsText(f);
+};
+
+applyBg();
+render();
+askToday();
+</script>
+</body>
+</html>
