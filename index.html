@@ -14,9 +14,9 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   /* sin 'rebote' del móvil: lo que se ve al tirar hacia abajo es el color del tema, no negro */
-  html{background:var(--bg);overscroll-behavior-y:none}
+  html{min-height:100%;background-color:var(--bg);background-image:radial-gradient(1200px 600px at 20% -10%,var(--glow) 0%,var(--bg) 60%);overscroll-behavior-y:none}
   body{overscroll-behavior-y:none}
-  body{background:radial-gradient(1200px 600px at 20% -10%,var(--glow) 0%,var(--bg) 60%);color:var(--text);
+  body{background:transparent;color:var(--text);
     font-family:"Inter","Segoe UI",system-ui,sans-serif;min-height:100vh;padding:28px 20px 60px 92px;letter-spacing:.2px}
   body.noscroll{overflow:hidden}
   #bg{position:fixed;inset:-200px;z-index:-1;background:center/cover no-repeat;display:none}
