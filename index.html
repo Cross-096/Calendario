@@ -13,10 +13,13 @@
     --examen:#c46a78; --actividad:#4f7cc9; --entrega:#c9a35a; --festivo:#6fa3b8; --libre:#8a94a8;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+  /* sin 'rebote' del móvil: lo que se ve al tirar hacia abajo es el color del tema, no negro */
+  html{background:var(--bg);overscroll-behavior-y:none}
+  body{overscroll-behavior-y:none}
   body{background:radial-gradient(1200px 600px at 20% -10%,var(--glow) 0%,var(--bg) 60%);color:var(--text);
     font-family:"Inter","Segoe UI",system-ui,sans-serif;min-height:100vh;padding:28px 20px 60px 92px;letter-spacing:.2px}
   body.noscroll{overflow:hidden}
-  #bg{position:fixed;inset:0;z-index:-1;background:center/cover no-repeat;display:none}
+  #bg{position:fixed;inset:-200px;z-index:-1;background:center/cover no-repeat;display:none}
   #bg::after{content:"";position:absolute;inset:0;background:var(--bgov)}
   body.hasbg #bg{display:block}
   body.hasbg .cal,body.hasbg .box{backdrop-filter:blur(8px)}
@@ -265,8 +268,8 @@
   .rbs{font-size:.7rem;color:var(--muted);letter-spacing:.5px}
 
   /* ===== Diseño CRISTAL: vidrio translúcido y menú lateral con nombres ===== */
-  body[data-layout=glass]{padding-left:288px;
-    background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 42%,var(--bg)) 0%,color-mix(in srgb,var(--accent2) 60%,var(--bg)) 58%,color-mix(in srgb,var(--accent) 72%,var(--bg)) 100%) fixed}
+  html[data-layout=glass]{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 42%,var(--bg)) 0%,color-mix(in srgb,var(--accent2) 60%,var(--bg)) 58%,color-mix(in srgb,var(--accent) 72%,var(--bg)) 100%) fixed}
+  body[data-layout=glass]{padding-left:288px;background:transparent}
   body[data-layout=glass]::before,body[data-layout=glass]::after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;
     border:1px solid color-mix(in srgb,var(--text) 25%,transparent);background:color-mix(in srgb,var(--text) 8%,transparent)}
   body[data-layout=glass]::before{width:440px;height:440px;right:-120px;top:14%}
@@ -779,7 +782,7 @@ function applyStyle(){
   r.setProperty("--accent",A); r.setProperty("--accent2",lt?(T.a2l||T.a2):T.a2);
   r.setProperty("--onacc", lt?(T.onl||T.on||"#fff"):(T.on||"#fff"));
   r.setProperty("--gl", (ui.alpha*0.17).toFixed(1)+"%");
-  document.body.dataset.layout = ui.layout;
+  document.body.dataset.layout = ui.layout; document.documentElement.dataset.layout = ui.layout;
   setFavicon(A);
   for(const k in v) r.setProperty("--"+k, v[k]);
   r.setProperty("--pa", ui.alpha+"%");
