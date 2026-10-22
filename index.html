@@ -52,7 +52,13 @@
   .tab{background:none;border:none;border-bottom:2px solid transparent;border-radius:0;color:var(--muted);
     padding:8px 12px;font-size:.75rem;text-transform:uppercase;letter-spacing:2px;white-space:nowrap}
   .tab.active{color:var(--text);border-bottom-color:var(--accent)}
-  .layout{display:grid;grid-template-columns:1fr 280px;gap:20px}
+  .layout{display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 280px;grid-template-areas:"cal R"}
+  .layout>.cal{grid-area:cal}
+  .zone{min-width:0;display:flex;flex-direction:column;gap:16px}
+  .zone[data-z=L]{grid-area:L}.zone[data-z=R]{grid-area:R}.zone[data-z=T]{grid-area:T}.zone[data-z=B]{grid-area:B}
+  .zone[data-z=T],.zone[data-z=B]{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start}
+  .zone[hidden],[hidden]{display:none!important}
+  body.wide2 .wrap{max-width:1440px}
   .cal,.box{background:color-mix(in srgb,var(--panel) var(--pa),transparent)}
   .cal{border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .calhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
@@ -96,7 +102,6 @@
   .day.filled.today .num{background:var(--accent);color:var(--onacc,#fff);text-shadow:none}
   .day.filled.today{box-shadow:inset 0 0 0 2px var(--accent)}
   .day.filled:hover .fills{filter:brightness(1.15)}
-  aside{display:flex;flex-direction:column;gap:16px}
   .box{border:1px solid var(--line);border-radius:10px;padding:16px}
   .box h3{font-weight:400;font-size:.72rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
   .legend div{display:flex;align-items:center;gap:10px;font-size:.8rem;margin:7px 0;color:var(--text)}
@@ -161,8 +166,8 @@
   .desc{white-space:pre-wrap;line-height:1.55;font-size:.95rem;word-break:break-word}
 
   /* ===== Ventana de día (estilo consola) ===== */
-  #day,#hor{position:fixed;inset:0;z-index:60;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s;background:var(--bg);color:var(--text)}
-  #day.open,#hor.open{visibility:visible;opacity:1}
+  #day,#hor,#sty{position:fixed;inset:0;z-index:60;visibility:hidden;opacity:0;transition:opacity .3s,visibility .3s;background:var(--bg);color:var(--text)}
+  #day.open,#hor.open,#sty.open{visibility:visible;opacity:1}
   #dayArt,#horArt{position:absolute;inset:0;overflow:hidden}
   .art{position:absolute;inset:0;overflow:hidden;
     background:
@@ -178,7 +183,7 @@
   .dwrap{position:relative;height:100%;display:flex;flex-direction:column;gap:8px;padding:26px clamp(18px,5vw,64px) 22px}
   .dtop{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
   .vdate{color:var(--muted);font-size:.72rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
-  #vTitle,#hTitle{font-weight:300;letter-spacing:3px;text-transform:uppercase;font-size:1.05rem;margin:0}
+  #vTitle,#hTitle,#sTitle{font-weight:300;letter-spacing:3px;text-transform:uppercase;font-size:1.05rem;margin:0}
   .dmain{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;width:min(680px,100%);overflow-y:auto;padding:10px 0}
   .dmain.anim>*{animation:rise .45s ease both}
   .dmain.anim>*:nth-child(2){animation-delay:.05s}.dmain.anim>*:nth-child(3){animation-delay:.1s}
@@ -203,7 +208,7 @@
   #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent2);color:#fff;padding:10px 18px;border-radius:6px;font-size:.8rem;opacity:0;pointer-events:none;transition:.3s;z-index:99;max-width:92vw;text-align:center}
   #toast.show{opacity:1}
   @media(max-width:860px){
-    .layout{grid-template-columns:1fr}
+    .layout{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"T" "cal" "L" "R" "B"!important}
     .day{min-height:68px;padding:4px}
     .chip{font-size:0;height:6px;padding:0;border-left:none;background:var(--c);border-radius:3px;margin-top:2px}
     .chip.past{background:#fff}
@@ -344,7 +349,159 @@
     body[data-layout=bento] .ib{width:32px;height:32px}
     body[data-layout=bento] .ib svg{width:17px;height:17px}
   }
+  /* ===== Exportar / Importar ===== */
+  #xfTabs{margin-top:2px}
+  label.ck{display:flex;align-items:flex-start;gap:10px;padding:9px 0;margin:0;border-bottom:1px solid var(--line);cursor:pointer;
+    text-transform:none;letter-spacing:0;font-size:.88rem;color:var(--text)}
+  label.ck input{width:18px;height:18px;flex:none;margin-top:2px;padding:0;accent-color:var(--accent)}
+  label.ck small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px;line-height:1.35}
+  label.ck.dis{opacity:.45;cursor:default}
+  #xCals,#xParts,#iCals{border-top:1px solid var(--line)}
+  #iBody>label:first-child{margin-top:16px}
   @media(max-height:560px){.rail{gap:4px;padding:5px}.ib{width:34px;height:34px}.ib svg{width:18px;height:18px}}
+
+  /* ===== Dificultad: calavera y barra ===== */
+  .dwid{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .skw{display:inline-flex;align-items:center;gap:10px}
+  .skull{width:44px;height:48px;flex:none;transition:transform .25s}
+  .skw:hover .skull{transform:rotate(-5deg) scale(1.06)}
+  .pips{display:inline-flex;gap:5px}
+  .pip{width:22px;height:22px;border-radius:50%;padding:0;font-size:.66rem;line-height:1;letter-spacing:0;background:none;color:var(--muted);border:1px solid color-mix(in srgb,var(--muted) 60%,transparent)}
+  .pip.on{background:var(--dc);border-color:var(--dc);color:#0b0f19;font-weight:700}
+  .pip:hover{border-color:var(--dc,#fff);color:var(--dc,#fff)}.pip.on:hover{color:#0b0f19}
+  .dbar{display:inline-flex;gap:4px;padding:3px;border-radius:8px;background:color-mix(in srgb,var(--text) 9%,transparent)}
+  .bseg{width:32px;height:14px;padding:0;border:none;border-radius:4px;letter-spacing:0;background:color-mix(in srgb,var(--muted) 35%,transparent);transition:transform .15s,filter .15s}
+  .bseg.on{background:var(--sc)}
+  .bseg:hover{transform:scaleY(1.35);filter:brightness(1.2)}
+
+  /* ===== Ventana de evento: estilo "Persona" (arte a la derecha, datos a la izquierda) ===== */
+  .pbg,.pstripe,.pnav{display:none}
+  #day[data-evs=persona] .pbg{display:block;position:absolute;inset:0;
+    background:repeating-linear-gradient(115deg,transparent 0 22px,color-mix(in srgb,var(--accent) 7%,transparent) 22px 25px),
+      linear-gradient(115deg,var(--panel) 0%,var(--bg) 100%)}
+  #day[data-evs=persona] .pstripe{display:block;position:absolute;inset:0;pointer-events:none;
+    background:var(--ac2,var(--accent));clip-path:polygon(57% 0,60% 0,38% 100%,35% 100%)}
+  #day[data-evs=persona] #dayArt{clip-path:polygon(60% 0,100% 0,100% 100%,38% 100%)}
+  #day[data-evs=persona] .dscrim{display:none}
+  #day[data-evs=persona] .dmain{width:min(40vw,520px)}
+  #day[data-evs=persona] .dtag{display:inline-block;align-self:flex-start;padding:4px 22px 4px 12px;color:#fff;
+    background:color-mix(in srgb,var(--tc) 80%,#000);clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+  #day[data-evs=persona] .dtitle{font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:1px;
+    text-shadow:3px 3px 0 color-mix(in srgb,var(--accent) 45%,transparent)}
+  #day[data-evs=persona] .diff{border-top:none;border-left:3px solid var(--dc,var(--accent));padding:4px 0 4px 14px;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--text) 8%,transparent),transparent)}
+  #day[data-evs=persona] .tiles{display:none}
+  #day[data-evs=persona] .dbottom{justify-content:flex-end}
+  #day[data-evs=persona] .pnav{display:flex;align-items:center;gap:12px;font-size:.8rem;letter-spacing:1px}
+  .pnav button{padding:4px 12px;font-style:italic;font-weight:700;letter-spacing:2px}
+  .pdots{display:flex;gap:7px;align-items:center}
+  .pdots i{width:6px;height:6px;border-radius:50%;background:color-mix(in srgb,var(--text) 35%,transparent);cursor:pointer}
+  .pdots i.on{width:12px;height:12px;background:none;border:2px solid var(--text)}
+  @media(max-width:760px){
+    #day[data-evs=persona] .pbg{opacity:.86;z-index:1}
+    #day[data-evs=persona] #dayArt{clip-path:none}
+    #day[data-evs=persona] .pstripe{display:none}
+    #day[data-evs=persona] .dwrap{z-index:2}
+    #day[data-evs=persona] .dmain{width:100%}
+    #day[data-evs=persona] .pnav{display:none}
+    #day[data-evs=persona] .pbg{z-index:1}
+    #day[data-evs=persona] #dayArt{z-index:0}
+  }
+
+  /* ===== Ventana de evento: estilo "Tarjeta" (pequeña, centrada) ===== */
+  #day[data-evs=card]{background:rgba(3,5,10,.6);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+  #day[data-evs=card] #dayArt,#day[data-evs=card] .dscrim,#day[data-evs=card] .dwrap{
+    position:absolute;inset:auto;left:50%;top:50%;width:min(540px,94vw);height:min(640px,90vh);
+    transform:translate(-50%,-50%);border-radius:18px;box-sizing:border-box}
+  #day[data-evs=card] #dayArt{border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 80px rgba(0,0,0,.65)}
+  #day[data-evs=card] .dscrim{background:linear-gradient(0deg,var(--scrim1) 0%,var(--scrim2) 58%,transparent 100%)}
+  #day[data-evs=card] .dwrap{padding:18px 20px 16px;overflow:hidden}
+  #day[data-evs=card] .dmain{width:100%;justify-content:flex-end}
+  #day[data-evs=card] .dtitle{font-size:clamp(1.4rem,5vw,2rem)}
+  #day[data-evs=card] .dbottom{flex-direction:column;align-items:stretch;gap:4px}
+  #day[data-evs=card] .tiles{padding:10px 6px 8px}
+  #day[data-evs=card] .tile{width:96px;height:56px}
+  #day[data-evs=card] .dact{justify-content:flex-end;padding-bottom:0}
+  #day[data-evs=card] .glyph{font-size:clamp(4rem,14vw,8rem);right:8%;top:10%;bottom:auto}
+  #day.open[data-evs=card] #dayArt,#day.open[data-evs=card] .dscrim,#day.open[data-evs=card] .dwrap{animation:cardin .3s ease both}
+  @keyframes cardin{from{opacity:0;transform:translate(-50%,-47%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  /* ===== Materias (una a una) y aros de progreso ===== */
+  .scar{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;gap:6px;align-items:center}
+  .scar>button{padding:0;height:56px;font-size:1.1rem;letter-spacing:0}
+  .scard{position:relative;display:block;width:100%;height:96px;padding:0;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:#05070c;text-align:left;letter-spacing:0;color:#fff}
+  .scard .glyph{font-size:2.6rem;right:10px;bottom:24px;top:auto;opacity:.2}
+  .scard .sl{position:absolute;left:0;right:0;bottom:0;padding:22px 10px 7px;background:linear-gradient(transparent,rgba(0,0,0,.88));font-size:.82rem;line-height:1.2;word-break:break-word}
+  .scard .sl small{display:block;margin-top:2px;font-size:.66rem;letter-spacing:1px;opacity:.8;text-transform:uppercase}
+  .scard .sl b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:500}
+  .scard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ac);z-index:2}
+  #subjList .scar{display:grid;align-items:center;margin:0;gap:6px}
+  #subjList .scar>div,#subjList .scard,#subjList .sl{display:block;margin:0}
+  #subjList .scard{align-items:normal}
+  .smeta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:.72rem;color:var(--muted)}
+  .smeta button{padding:4px 10px;font-size:.72rem}
+  #subjAll{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:4px 0 0}
+  #subjAll .scard{height:110px;cursor:pointer;transition:transform .15s}
+  #subjAll .scard:hover{transform:translateY(-2px)}
+  .rings{display:flex;gap:14px;justify-content:space-around;flex-wrap:wrap}
+  .ringb{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:.72rem;line-height:1.3;max-width:48%;min-width:110px}
+  .ring{position:relative;width:96px;height:96px}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+  .ring .tr{stroke:var(--line)}.ring .fg{stroke:var(--accent);transition:stroke-dashoffset .6s}
+  .ring span{position:absolute;inset:0;display:grid;place-items:center;font-size:1.05rem;font-weight:600}
+
+  /* ===== Pantalla de estilos (pantalla completa, con su propio fondo) ===== */
+  #styArt{position:absolute;inset:0;overflow:hidden}
+  #styArt .sov{position:absolute;inset:0;pointer-events:none;background:var(--sov,transparent)}
+  #sty:not(.hasimg) .sov{display:none}
+  html[data-text=dark] #sty .art:not(.img){background:
+    radial-gradient(900px 520px at 78% 28%,color-mix(in srgb,var(--accent) 40%,#fff),transparent 70%),
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,#fff),#fff)}
+  #sty .dtop{align-items:center;padding:12px 18px;border-radius:14px;border:1px solid var(--line);
+    background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .sbody{flex:1;min-height:0;overflow-y:auto;padding:6px 2px 24px;margin-top:6px}
+  .sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));gap:16px;align-items:start}
+  .ssec{padding:18px;border-radius:14px;border:1px solid var(--line);min-width:0;
+    background:color-mix(in srgb,var(--panel) 84%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .ssec.wide{grid-column:1/-1}
+  .ssec h4{font-weight:500;font-size:.74rem;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+  .ssec>h4+label{margin-top:8px}
+  .pcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin-top:6px}
+  @media(max-width:860px){.pcols{grid-template-columns:minmax(0,1fr)}}
+  /* plantillas: la misma rejilla sirve para las miniaturas y para el mapa */
+  .tgrid{display:grid;gap:4px}
+  .tgrid[data-t=right]{grid-template:"cal R" 1fr / minmax(0,1fr) 30%}
+  .tgrid[data-t=left]{grid-template:"L cal" 1fr / 30% minmax(0,1fr)}
+  .tgrid[data-t=both]{grid-template:"L cal R" 1fr / 26% minmax(0,1fr) 26%}
+  .tgrid[data-t=top]{grid-template:"T" 32% "cal" 1fr / minmax(0,1fr)}
+  .tgrid[data-t=bottom]{grid-template:"cal" 1fr "B" 32% / minmax(0,1fr)}
+  .tgrid[data-t=tb]{grid-template:"T" 26% "cal" 1fr "B" 26% / minmax(0,1fr)}
+  .tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:10px;margin:8px 0 4px}
+  .tpl{display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px;border-radius:10px;letter-spacing:0;font-size:.72rem;line-height:1.25;text-align:center}
+  .tpl.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,var(--panel2))}
+  .thumb{width:76px;height:52px}
+  .thumb .z{border-radius:3px;background:color-mix(in srgb,var(--accent) 60%,transparent)}
+  .thumb .c{border-radius:3px;background:color-mix(in srgb,var(--text) 20%,transparent)}
+  .tmap{height:240px;margin-top:10px}
+  .tmap .z{border:1px dashed color-mix(in srgb,var(--accent) 75%,transparent);border-radius:8px;padding:6px;min-width:0;overflow:hidden;
+    background:color-mix(in srgb,var(--accent) 12%,transparent);display:flex;flex-direction:column;gap:5px}
+  .tmap[data-t=top] .z,.tmap[data-t=bottom] .z,.tmap[data-t=tb] .z{flex-direction:row;flex-wrap:wrap;align-content:flex-start}
+  .tmap .zn{flex:none;width:100%;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+  .tmap .c{border-radius:8px;display:grid;place-items:center;font-size:.72rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);background:color-mix(in srgb,var(--text) 7%,transparent)}
+  .pc{font-size:.7rem;padding:4px 8px;border-radius:6px;background:var(--accent2);color:var(--onacc,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .pe{font-size:.68rem;color:var(--muted);font-style:italic}
+  .prow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--line)}
+  .prow:last-child{border-bottom:none}
+  .prow .pn{flex:1;min-width:92px;font-size:.92rem}
+  .prow.off .pn{color:var(--muted)}
+  .zseg button{padding:6px 10px;font-size:.72rem;letter-spacing:.5px}
+  .mv{display:flex;gap:4px}.mv button{padding:5px 9px;font-size:.72rem;letter-spacing:0}
+  .tg{width:44px;height:26px;padding:2px;border-radius:99px;flex:none;background:color-mix(in srgb,var(--text) 14%,transparent);border:1px solid var(--line)}
+  .tg i{display:block;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+  .tg.on{background:var(--accent2);border-color:var(--accent)}
+  .tg.on i{transform:translateX(18px);background:#fff}
+  @media(max-width:480px){ #sty .dwrap{padding:14px 12px} .ssec{padding:14px} }
 </style>
 </head>
 <body>
@@ -358,9 +515,8 @@
   <button class="ib" id="horarioBtn" data-tip="Horario escolar" aria-label="Horario escolar"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M9.2 9.5v10M14.8 9.5v10"/></svg><span class="lb">Horario escolar</span></button>
   <button class="ib" id="styleBtn" data-tip="Estilos" aria-label="Estilos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.3 0 2-.9 2-1.9 0-1.2-1-1.6-1-2.7 0-1 .8-1.7 1.9-1.7H17a3.5 3.5 0 0 0 3.5-3.5C20.5 6.7 16.7 3.5 12 3.5z"/><circle cx="7.8" cy="11" r="1" fill="currentColor"/><circle cx="10.5" cy="7.6" r="1" fill="currentColor"/><circle cx="14.8" cy="7.8" r="1" fill="currentColor"/></svg><span class="lb">Estilos</span></button>
   <i class="sep"></i>
-  <button class="ib" id="exportBtn" data-tip="Exportar JSON" aria-label="Exportar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg><span class="lb">Exportar JSON</span></button>
-  <button class="ib" id="importBtn" data-tip="Importar JSON" aria-label="Importar JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19.5h14"/></svg><span class="lb">Importar JSON</span></button>
-  <input type="file" id="importFile" accept="application/json" hidden>
+  <button class="ib" id="exportBtn" data-tip="Exportar" aria-label="Exportar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg><span class="lb">Exportar</span></button>
+  <button class="ib" id="importBtn" data-tip="Importar" aria-label="Importar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 19.5h14"/></svg><span class="lb">Importar</span></button>
 </nav>
 <div class="wrap">
   <header>
@@ -375,7 +531,9 @@
 
   <div class="tabs" id="tabs"></div>
 
-  <div class="layout">
+  <div class="layout" id="layout">
+    <div class="zone" id="zone-T" data-z="T"></div>
+    <div class="zone" id="zone-L" data-z="L"></div>
     <section class="cal">
       <div class="calhead">
         <div class="nav"><button id="prev">←</button></div>
@@ -386,8 +544,8 @@
       <div class="grid" id="grid"></div>
     </section>
 
-    <aside>
-      <div class="box legend">
+    <div class="zone" id="zone-R" data-z="R">
+      <div class="box legend" id="pn-legend">
         <h3>Leyenda</h3>
         <div><span class="dot" style="background:var(--examen)"></span>Examen</div>
         <div><span class="dot" style="background:var(--actividad)"></span>Actividad</div>
@@ -396,32 +554,37 @@
         <div><span class="dot" style="background:var(--libre)"></span>Día libre</div>
         <div><span class="dot w"></span>Ya pasó</div>
       </div>
-      <div class="box legend">
+      <div class="box legend" id="pn-subjects">
         <h3>Materias</h3>
         <div id="subjList"></div>
+        <div class="smeta"><span id="subjPos"></span><button type="button" id="subjAllBtn">Ver todas</button></div>
       </div>
-      <div class="box">
+      <div class="box" id="pn-prog">
         <h3>Transcurso</h3>
         <div id="prog"></div>
       </div>
-      <div class="box">
+      <div class="box" id="pn-upcoming">
         <h3>Próximos</h3>
         <div id="upcoming"></div>
       </div>
-      <div class="box note">
+    </div>
+    <div class="zone" id="zone-B" data-z="B"></div>
+  </div>
+  <div class="box note" style="margin-top:20px">
         Los datos, el fondo y los estilos se guardan automáticamente en este navegador. Para no perderlos nunca o usarlos en otro dispositivo, usa <b>Exportar</b> y guarda el JSON (por ejemplo en tu repo).
-      </div>
-    </aside>
   </div>
 </div>
 
 <!-- Ventana de día -->
 <div id="day" role="dialog" aria-modal="true" aria-label="Detalle del día">
+  <div class="pbg"></div>
   <div id="dayArt"></div>
+  <div class="pstripe"></div>
   <div class="dscrim"></div>
   <div class="dwrap">
     <div class="dtop">
       <div><div class="vdate" id="vSub"></div><h3 id="vTitle"></h3></div>
+      <div class="pnav" id="vPn"></div>
       <button type="button" id="vClose">✕ Cerrar</button>
     </div>
     <div class="dmain" id="vMain"></div>
@@ -500,45 +663,147 @@
   </div>
 </div>
 
-<!-- Estilos -->
-<dialog id="styleDlg">
-  <h3>Estilos</h3>
-  <label>Color de la interfaz</label>
-  <div class="sw" id="swatches"></div>
-  <label>Color de la letra</label>
-  <div class="seg" id="segText">
-    <button type="button" data-v="light">Blanca</button>
-    <button type="button" data-v="dark">Negra</button>
+<!-- Exportar / Importar -->
+<dialog id="xfDlg" class="big">
+  <h3 id="xfTitle">Exportar</h3>
+  <div class="seg" id="xfTabs">
+    <button type="button" data-t="exp">Exportar</button>
+    <button type="button" data-t="imp">Importar</button>
   </div>
-  <p class="note" style="margin-top:6px">Con letra negra la interfaz pasa a una versión clara para que se lea bien.</p>
-  <label>Opacidad de la interfaz<b id="paV"></b></label>
-  <input type="range" id="rPa" min="15" max="100" step="1">
-  <label>Fondo</label>
-  <div class="dh">
-    <button type="button" id="bgBtn">Elegir imagen</button>
-    <button type="button" id="bgClear" hidden>Quitar fondo</button>
+  <div id="xfExp">
+    <p class="note" style="margin-top:10px">Elige qué quieres guardar. Cada parte se puede mandar por separado (por ejemplo, solo un calendario, solo los eventos o solo los estilos).</p>
+    <label id="xCalLbl">Calendarios</label>
+    <div id="xCals"></div>
+    <label>Qué exportar</label>
+    <div id="xParts"></div>
+    <label>Formato</label>
+    <div class="seg" id="xMode">
+      <button type="button" data-v="one">Un solo archivo</button>
+      <button type="button" data-v="sep">Un archivo por cada cosa</button>
+    </div>
+    <div class="actions">
+      <button type="button" id="xfClose">Cerrar</button>
+      <button type="button" id="xAll">Exportar TODO</button>
+      <button type="button" class="primary" id="xGo">Exportar selección</button>
+    </div>
   </div>
-  <input type="file" id="bgFile" accept="image/*" hidden>
-  <label>Claridad de la imagen de fondo<b id="bgV"></b></label>
-  <input type="range" id="rBg" min="-100" max="100" step="1">
-  <div class="note" style="display:flex;justify-content:space-between"><span>Más oscura</span><span>Más clara</span></div>
-  <label>Diseño</label>
-  <div class="seg" id="segLayout">
-    <button type="button" data-v="classic">Clásico</button>
-    <button type="button" data-v="glass">Cristal</button>
-    <button type="button" data-v="bento">Paneles</button>
-  </div>
-  <p class="note" id="layoutNote" style="margin-top:6px"></p>
-  <label>Vista de eventos</label>
-  <div class="seg" id="segView">
-    <button type="button" data-v="blocks">Bloques (nueva)</button>
-    <button type="button" data-v="bars">Barras (anterior)</button>
-  </div>
-  <div class="actions">
-    <button type="button" id="stReset">Restablecer estilos</button>
-    <button type="button" class="primary" id="stClose">Cerrar</button>
+  <div id="xfImp" hidden>
+    <p class="note" style="margin-top:10px">Elige un archivo .json exportado desde aquí (completo o de una sola parte) y marca qué quieres traer.</p>
+    <div class="dh" style="margin-top:10px"><button type="button" id="iPick" class="primary">Elegir archivo…</button><span class="muted" id="iName"></span></div>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+    <div id="iBody"></div>
+    <div class="actions" id="iEmpty"><button type="button" id="xfClose2">Cerrar</button></div>
   </div>
 </dialog>
+
+<!-- Estilos (pantalla completa, con su propio fondo) -->
+<div id="sty" role="dialog" aria-modal="true" aria-label="Estilos">
+  <div id="styArt"><div class="art" id="styArtIn"></div><div class="sov"></div></div>
+  <div class="dwrap">
+    <div class="dtop">
+      <div><div class="vdate">Personaliza tu calendario</div><h3 id="sTitle">Estilos</h3></div>
+      <button type="button" id="stClose">✕ Cerrar</button>
+    </div>
+    <div class="sbody">
+      <div class="sgrid">
+        <section class="ssec">
+          <h4>Colores</h4>
+          <label>Color de la interfaz</label>
+          <div class="sw" id="swatches"></div>
+          <label>Color de la letra</label>
+          <div class="seg" id="segText">
+            <button type="button" data-v="light">Blanca</button>
+            <button type="button" data-v="dark">Negra</button>
+          </div>
+          <p class="note" style="margin-top:6px">Con letra negra la interfaz pasa a una versión clara para que se lea bien.</p>
+          <label>Opacidad de la interfaz<b id="paV"></b></label>
+          <input type="range" id="rPa" min="15" max="100" step="1">
+        </section>
+
+        <section class="ssec">
+          <h4>Fondo del calendario</h4>
+          <div class="dh" style="margin-top:8px">
+            <button type="button" id="bgBtn">Elegir imagen</button>
+            <button type="button" id="bgClear" hidden>Quitar fondo</button>
+          </div>
+          <input type="file" id="bgFile" accept="image/*" hidden>
+          <label>Claridad de la imagen de fondo<b id="bgV"></b></label>
+          <input type="range" id="rBg" min="-100" max="100" step="1">
+          <div class="note" style="display:flex;justify-content:space-between"><span>Más oscura</span><span>Más clara</span></div>
+        </section>
+
+        <section class="ssec">
+          <h4>Fondo de esta pantalla</h4>
+          <p class="note" style="margin-top:6px">Es independiente del fondo del calendario y solo se ve aquí, en Estilos.</p>
+          <div class="dh" style="margin-top:10px">
+            <button type="button" id="sbgBtn">Elegir imagen</button>
+            <button type="button" id="sbgClear" hidden>Quitar fondo</button>
+          </div>
+          <input type="file" id="sbgFile" accept="image/*" hidden>
+          <label>Claridad de la imagen<b id="sbgV"></b></label>
+          <input type="range" id="rSbg" min="-100" max="100" step="1">
+          <div class="note" style="display:flex;justify-content:space-between"><span>Más oscura</span><span>Más clara</span></div>
+        </section>
+
+        <section class="ssec">
+          <h4>Diseño y vistas</h4>
+          <label>Diseño</label>
+          <div class="seg" id="segLayout">
+            <button type="button" data-v="classic">Clásico</button>
+            <button type="button" data-v="glass">Cristal</button>
+            <button type="button" data-v="bento">Paneles</button>
+          </div>
+          <p class="note" id="layoutNote" style="margin-top:6px"></p>
+          <label>Vista de eventos</label>
+          <div class="seg" id="segView">
+            <button type="button" data-v="blocks">Bloques (nueva)</button>
+            <button type="button" data-v="bars">Barras (anterior)</button>
+          </div>
+          <label>Ventana del evento</label>
+          <div class="seg" id="segEvs">
+            <button type="button" data-v="console">Grande</button>
+            <button type="button" data-v="persona">Dividida</button>
+            <button type="button" data-v="card">Tarjeta</button>
+          </div>
+          <p class="note" id="evsNote" style="margin-top:6px"></p>
+          <label>Aspecto del transcurso</label>
+          <div class="seg" id="segProg">
+            <button type="button" data-v="bar">Barra</button>
+            <button type="button" data-v="ring">Aro</button>
+          </div>
+          <label>Estilo de dificultad</label>
+          <div class="seg" id="segDiff">
+            <button type="button" data-v="stars">★ Estrellas</button>
+            <button type="button" data-v="skull">☠ Calavera</button>
+            <button type="button" data-v="bar">▰ Barra</button>
+          </div>
+        </section>
+
+        <section class="ssec wide">
+          <h4>Paneles y ubicación</h4>
+          <p class="note" style="margin-top:6px">Elige qué paneles quieres ver y dónde van. Cada plantilla tiene zonas fijas: no se pueden poner en cualquier sitio, solo dentro de la plantilla que elijas.</p>
+          <label>Plantilla</label>
+          <div class="tpls" id="tplPick"></div>
+          <div class="pcols">
+            <div>
+              <label>Así queda</label>
+              <div class="tgrid tmap" id="tplMap"></div>
+            </div>
+            <div>
+              <label>Paneles</label>
+              <div id="panelRows"></div>
+              <p class="note" id="panelNote" style="margin-top:8px"></p>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="actions">
+        <button type="button" id="stReset">Restablecer estilos</button>
+        <button type="button" class="primary" id="stDone">Listo</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Crear / editar evento -->
 <dialog id="dlg">
@@ -569,7 +834,7 @@
     <label>Descripción</label>
     <textarea id="fNote" rows="4" maxlength="1500" placeholder="Explica bien de qué trata el evento…"></textarea>
     <label>Dificultad</label>
-    <div class="dh"><span class="stars" id="fStars"></span><span class="dname" id="fDiffName"></span></div>
+    <div class="dh"><span class="dwid" id="fStars"></span><span class="dname" id="fDiffName"></span></div>
     <label>¿Por qué esa dificultad?</label>
     <textarea id="fDiffNote" rows="2" maxlength="500" placeholder="Breve explicación de por qué la elegiste"></textarea>
     <div class="actions">
@@ -578,6 +843,11 @@
       <button type="submit" class="primary" id="saveBtn">Guardar</button>
     </div>
   </form>
+</dialog>
+<dialog id="subjDlg" class="big">
+  <h3>Materias</h3>
+  <div id="subjAll"></div>
+  <div class="actions"><button type="button" class="primary" id="subjAllClose">Cerrar</button></div>
 </dialog>
 <div id="toast"></div>
 <div id="ptr" aria-hidden="true">↓</div>
@@ -625,7 +895,25 @@ const LAYOUTS = {
   glass:"Vidrio translúcido y menú lateral con nombres, como un panel de perfil. Queda muy bien con Rosa o Naranja.",
   bento:"Tarjetas muy redondeadas y los iconos en una barra flotante abajo. Queda muy bien con Verde."
 };
-const DEF_UI = {theme:"azul", text:"light", alpha:80, bgLight:-80, view:"blocks", layout:"classic"};
+const PANELS = {legend:"Leyenda", subjects:"Materias", prog:"Transcurso", upcoming:"Próximos"};
+const PANEL_IDS = Object.keys(PANELS);
+const ZN = {L:"Izquierda", R:"Derecha", T:"Arriba", B:"Abajo"};
+const ZONE_IDS = ["L","R","T","B"];
+/* Plantillas: cada una define unas zonas fijas; los paneles solo se pueden colocar en ellas */
+const TPLS = {
+  right:{n:"Lateral derecho", zones:["R"]},
+  left:{n:"Lateral izquierdo", zones:["L"]},
+  both:{n:"Dos laterales", zones:["L","R"]},
+  top:{n:"Fila arriba", zones:["T"]},
+  bottom:{n:"Fila abajo", zones:["B"]},
+  tb:{n:"Arriba y abajo", zones:["T","B"]}
+};
+/* si la zona elegida no existe en la plantilla actual, se usa la más parecida que sí exista */
+const FALL = {R:["R","L","T","B"], L:["L","R","T","B"], T:["T","B","R","L"], B:["B","T","R","L"]};
+const DEF_UI = {theme:"azul", text:"light", alpha:80, bgLight:-80, view:"blocks", layout:"classic", evs:"console", diff:"stars", prog:"bar",
+  tpl:"right", show:{legend:true,subjects:true,prog:true,upcoming:true}, zone:{legend:"R",subjects:"R",prog:"R",upcoming:"R"},
+  order:["legend","subjects","prog","upcoming"], sbgLight:-45};
+const EVS = {console:"Ventana a pantalla completa, como siempre.", persona:"Pantalla dividida: el fondo de la materia a la derecha y los datos del evento a la izquierda. Usa ◀ LB / RB ▶ para cambiar de evento.", card:"Se abre una tarjeta pequeña centrada con el fondo de la materia. Toca fuera para cerrarla."};
 
 /* Materias del calendario original (las que ya tenías) */
 const DEF_SUBJ = {
@@ -674,6 +962,16 @@ const normUI = s => {
   if(o.text!=="light" && o.text!=="dark") o.text = DEF_UI.text;
   if(o.view!=="blocks" && o.view!=="bars") o.view = DEF_UI.view;
   if(!LAYOUTS[o.layout]) o.layout = DEF_UI.layout;
+  if(!EVS[o.evs]) o.evs = DEF_UI.evs;
+  if(o.prog!=="bar" && o.prog!=="ring") o.prog = DEF_UI.prog;
+  if(!["stars","skull","bar"].includes(o.diff)) o.diff = DEF_UI.diff;
+  if(!TPLS[o.tpl]) o.tpl = DEF_UI.tpl;
+  const sh = o.show && typeof o.show==="object" ? o.show : {}, zn = o.zone && typeof o.zone==="object" ? o.zone : {};
+  o.show = {}; o.zone = {};
+  PANEL_IDS.forEach(p=>{ o.show[p] = !(sh[p]===false || sh[p]===0 || sh[p]==="false"); o.zone[p] = ZONE_IDS.includes(zn[p]) ? zn[p] : "R"; });
+  const ord = Array.isArray(o.order) ? o.order.filter((p,i,a)=>PANEL_IDS.includes(p) && a.indexOf(p)===i) : [];
+  PANEL_IDS.forEach(p=>{ if(!ord.includes(p)) ord.push(p); }); o.order = ord;
+  o.sbgLight = Math.max(-100, Math.min(100, isNaN(+o.sbgLight) ? DEF_UI.sbgLight : +o.sbgLight));
   o.alpha = Math.max(15, Math.min(100, +o.alpha || DEF_UI.alpha));
   o.bgLight = Math.max(-100, Math.min(100, isNaN(+o.bgLight) ? DEF_UI.bgLight : +o.bgLight));
   return o;
@@ -710,9 +1008,9 @@ function fromData(p){
   if(Array.isArray(p)) return {calendars:[defaultCal(p.map(norm))], active:"c_default", bg:"", simgs:{}, ui:normUI()};
   if(p && Array.isArray(p.calendars) && p.calendars.length){
     const cs = p.calendars.map(normCal);
-    return {calendars:cs, active:cs.some(c=>c.id===p.active)?p.active:cs[0].id, bg:p.bg||"", simgs:p.simgs||{}, ui:normUI(p.style)};
+    return {calendars:cs, active:cs.some(c=>c.id===p.active)?p.active:cs[0].id, bg:p.bg||"", sbg:p.sbg||"", simgs:p.simgs||{}, ui:normUI(p.style)};
   }
-  if(p && Array.isArray(p.events)) return {calendars:[defaultCal(p.events.map(norm))], active:"c_default", bg:p.bg||"", simgs:p.simgs||{}, ui:normUI(p.style)};
+  if(p && Array.isArray(p.events)) return {calendars:[defaultCal(p.events.map(norm))], active:"c_default", bg:p.bg||"", sbg:p.sbg||"", simgs:p.simgs||{}, ui:normUI(p.style)};
   throw new Error("formato");
 }
 
@@ -727,7 +1025,7 @@ function load(){
 }
 
 const L = load();
-let calendars = L.calendars, activeId = L.active, bg = L.bg, simgs = L.simgs, ui = L.ui;
+let calendars = L.calendars, activeId = L.active, bg = L.bg, sbg = L.sbg||"", simgs = L.simgs, ui = L.ui;
 let MONTHS = [];
 let today = "";        // se pregunta siempre al iniciar
 let cur = 0;
@@ -738,7 +1036,7 @@ const E = () => cal().events;
 const subj = k => (cal().subjects||{})[k];
 
 function save(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({version:5,calendars,active:activeId,bg,simgs,style:ui})); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({version:6,calendars,active:activeId,bg,sbg,simgs,style:ui})); }
   catch(e){ toast("No se pudo guardar en el navegador. Usa Exportar."); }
 }
 function iso(y,m,d){ return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
@@ -778,6 +1076,23 @@ function stars(n,id){
   return `<span class="stars">`+[1,2,3,4,5].map(i=>`<button type="button" class="star ${i<=n?"on":""}" data-star="${i}" data-id="${id}" aria-label="${i} estrellas">★</button>`).join("")+`</span>`;
 }
 
+function skullSVG(n){
+  const k=n||0, c=DCOL[n]||"#8a93a6", d={3:1.5,4:3.5,5:5.5}[k]||0, ry=k>=4?3.8:5;
+  const mouth={0:"M19 37h10",1:"M18 36Q24 40 30 36",2:"M18 37h12",3:"M18 38Q24 36.5 30 38",4:"M18 38.5Q24 33.5 30 38.5",5:"M16.5 38.5L20 35l2.5 3.5 3-3.5 2.5 3.5 3.5-3.5"}[k];
+  const horns = k===5 ? `<path d="M12 13C6 11 3.5 3 7 -4c5 4 9 8 11 13z" fill="${c}"/><path d="M36 13c6-2 8.5-10 5-17-5 4-9 8-11 13z" fill="${c}"/>` : "";
+  const brows = k>=3 ? `<path d="M11.5 19L22 ${21+d}M36.5 19L26 ${21+d}" stroke="${c}" stroke-width="2.6" stroke-linecap="round" fill="none"/>` : "";
+  const glow = k>=3 ? `<circle cx="18" cy="25.5" r="1.7" fill="${c}"/><circle cx="30" cy="25.5" r="1.7" fill="${c}"/>` : "";
+  const eyes = k===0 ? `<path d="M14 25h8M26 25h8" stroke="#1a1620" stroke-width="2.2" stroke-linecap="round"/>`
+    : `<ellipse cx="18" cy="25.5" rx="4.6" ry="${ry}" fill="#1a1620"/><ellipse cx="30" cy="25.5" rx="4.6" ry="${ry}" fill="#1a1620"/>`;
+  return `<svg class="skull" viewBox="0 -5 48 53" aria-hidden="true" style="opacity:${k?1:.5}">${horns}<path d="M24 4C12 4 6 13 6 22c0 7 3 11 7 13v7h22v-7c4-2 7-6 7-13C42 13 36 4 24 4z" fill="#e9e6df" stroke="#1a1620" stroke-width="1.4"/>${eyes}${glow}${brows}<path d="M22 33l2-3.5 2 3.5z" fill="#1a1620"/><path d="${mouth}" stroke="#1a1620" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M19 40v2M24 40v2M29 40v2" stroke="#1a1620" stroke-width="1.2"/></svg>`;
+}
+function diffWidget(n,id){
+  const st = ui.diff;
+  if(st==="skull") return `<span class="skw">${skullSVG(n)}<span class="pips">`+[1,2,3,4,5].map(i=>`<button type="button" class="pip ${i<=n?"on":""}" data-star="${i}" data-id="${id}" aria-label="Dificultad ${i} de 5">${i}</button>`).join("")+`</span></span>`;
+  if(st==="bar") return `<span class="dbar">`+[1,2,3,4,5].map(i=>`<button type="button" class="bseg ${i<=n?"on":""}" style="--sc:${DCOL[i]}" data-star="${i}" data-id="${id}" aria-label="Dificultad ${i} de 5"></button>`).join("")+`</span>`;
+  return stars(n,id);
+}
+
 /* ---------- Aplicar estilos ---------- */
 /* Icono de la pestaña: agenda con un ojo, en el color de acento del tema */
 function setFavicon(c){
@@ -796,10 +1111,63 @@ function applyStyle(){
   r.setProperty("--gl", (ui.alpha*0.17).toFixed(1)+"%");
   document.body.dataset.layout = ui.layout; document.documentElement.dataset.layout = ui.layout;
   setFavicon(A);
+  $("day").dataset.evs = ui.evs;
   for(const k in v) r.setProperty("--"+k, v[k]);
   r.setProperty("--pa", ui.alpha+"%");
   const b = ui.bgLight;
   r.setProperty("--bgov", b<0 ? `rgba(0,0,0,${(-b/100).toFixed(2)})` : `rgba(255,255,255,${(b/100).toFixed(2)})`);
+  const sb = ui.sbgLight;
+  r.setProperty("--sov", sb<0 ? `rgba(0,0,0,${(-sb/100).toFixed(2)})` : `rgba(255,255,255,${(sb/100).toFixed(2)})`);
+  document.documentElement.dataset.text = ui.text;
+  placePanels();
+}
+
+/* ---------- Paneles: visibilidad, plantilla y zonas ---------- */
+function zoneFor(p){ const zs = TPLS[ui.tpl].zones; return FALL[ui.zone[p]].find(z=>zs.includes(z)); }
+function visIn(z){ return ui.order.filter(p=>ui.show[p] && zoneFor(p)===z); }
+function placePanels(){
+  const lay = $("layout"); if(!lay) return;
+  const per = {}, has = {};
+  ZONE_IDS.forEach(z=>{ per[z] = TPLS[ui.tpl].zones.includes(z) ? visIn(z) : []; has[z] = per[z].length>0; });
+  ZONE_IDS.forEach(z=>{ const host=$("zone-"+z); per[z].forEach(p=>host.appendChild($("pn-"+p))); host.hidden = !has[z]; });
+  PANEL_IDS.forEach(p=>{ $("pn-"+p).hidden = !ui.show[p]; });
+  /* las zonas vacías no ocupan sitio: el calendario se ensancha */
+  const cols = [has.L&&"L", "cal", has.R&&"R"].filter(Boolean), n = cols.length;
+  const rows = []; if(has.T) rows.push(Array(n).fill("T").join(" ")); rows.push(cols.join(" ")); if(has.B) rows.push(Array(n).fill("B").join(" "));
+  lay.style.gridTemplateAreas = rows.map(r=>`"${r}"`).join(" ");
+  lay.style.gridTemplateColumns = cols.map(c=>c==="cal" ? "minmax(0,1fr)" : (has.L&&has.R ? "250px" : "280px")).join(" ");
+  document.body.classList.toggle("wide2", !!(has.L && has.R));
+  document.body.dataset.tpl = ui.tpl;
+}
+function movePanel(p,dir){
+  const list = visIn(zoneFor(p)), i = list.indexOf(p), j = i+dir;
+  if(i<0 || j<0 || j>=list.length) return;
+  const a = ui.order.indexOf(p), b = ui.order.indexOf(list[j]);
+  [ui.order[a], ui.order[b]] = [ui.order[b], ui.order[a]];
+}
+function renderTplUI(){
+  const t = TPLS[ui.tpl];
+  $("tplPick").innerHTML = Object.entries(TPLS).map(([k,v])=>
+    `<button type="button" class="tpl ${k===ui.tpl?"on":""}" data-t="${k}" aria-pressed="${k===ui.tpl}"><span class="tgrid thumb" data-t="${k}">${v.zones.map(z=>`<i class="z" style="grid-area:${z}"></i>`).join("")}<i class="c" style="grid-area:cal"></i></span>${v.n}</button>`).join("");
+  const map = $("tplMap"); map.dataset.t = ui.tpl;
+  map.innerHTML = t.zones.map(z=>{
+    const ps = visIn(z);
+    return `<div class="z" style="grid-area:${z}"><span class="zn">${ZN[z]}</span>${ps.map(p=>`<span class="pc">${PANELS[p]}</span>`).join("") || '<span class="pe">vacía</span>'}</div>`;
+  }).join("") + `<div class="c" style="grid-area:cal">Calendario</div>`;
+  const horiz = z => z==="T" || z==="B";
+  $("panelRows").innerHTML = ui.order.map(p=>{
+    const on = ui.show[p], z = zoneFor(p), list = visIn(z), i = list.indexOf(p), ar = horiz(z) ? ["◀","▶"] : ["▲","▼"];
+    return `<div class="prow ${on?"":"off"}" data-p="${p}">
+      <button type="button" class="tg ${on?"on":""}" role="switch" aria-checked="${on}" data-act="show" aria-label="Mostrar ${PANELS[p]}"><i></i></button>
+      <span class="pn">${PANELS[p]}</span>
+      ${t.zones.length>1 ? `<span class="seg zseg">${t.zones.map(x=>`<button type="button" data-z="${x}" class="${x===z?"on":""}">${ZN[x]}</button>`).join("")}</span>` : ""}
+      <span class="mv"><button type="button" data-mv="-1" aria-label="Mover antes" ${on&&i>0?"":"disabled"}>${ar[0]}</button><button type="button" data-mv="1" aria-label="Mover después" ${on&&i>=0&&i<list.length-1?"":"disabled"}>${ar[1]}</button></span>
+    </div>`;
+  }).join("");
+  const any = PANEL_IDS.some(p=>ui.show[p]);
+  $("panelNote").textContent = !any ? "Todos los paneles están ocultos: el calendario ocupa todo el ancho."
+    : t.zones.length>1 ? "Elige la zona de cada panel y su orden dentro de ella con las flechas."
+    : "Esta plantilla tiene una sola zona: ordena los paneles con las flechas o elige otra plantilla para colocarlos en otro lado.";
 }
 function syncStyleUI(){
   $("swatches").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.k===ui.theme));
@@ -807,9 +1175,16 @@ function syncStyleUI(){
   $("segView").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===ui.view));
   $("segLayout").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===ui.layout));
   $("layoutNote").textContent = LAYOUTS[ui.layout];
+  $("segEvs").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===ui.evs));
+  $("segDiff").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===ui.diff));
+  $("segProg").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===ui.prog));
+  $("evsNote").textContent = EVS[ui.evs];
   rPa.value = ui.alpha; $("paV").textContent = ui.alpha+"%";
   rBg.value = ui.bgLight; rBg.disabled = !bg;
   $("bgV").textContent = bg ? (ui.bgLight>0?`+${ui.bgLight}`:ui.bgLight) : " (sin imagen)";
+  $("rSbg").value = ui.sbgLight; $("rSbg").disabled = !sbg;
+  $("sbgV").textContent = sbg ? (ui.sbgLight>0?`+${ui.sbgLight}`:ui.sbgLight) : " (sin imagen)";
+  renderTplUI();
 }
 
 /* ---------- Cabecera, selector y materias ---------- */
@@ -821,13 +1196,39 @@ function renderHeader(){
   document.title = c.name;
   $("calSel").innerHTML = calendars.map(x=>`<option value="${esc(x.id)}" ${x.id===c.id?"selected":""}>${esc(x.name)}</option>`).join("")+`<option value="__new">＋ Crear calendario…</option>`;
 }
-function renderSubjects(){
-  const s=Object.values(cal().subjects||{});
-  $("subjList").innerHTML = s.length ? s.map(v=>`<div><span class="dot" style="background:${v.c}"></span><span>${esc(v.n)}</span></div>`).join("")
-    : '<div class="empty">Sin materias. Añádelas desde Calendarios → Editar.</div>';
+let subjIdx = 0;
+function subjCard(k, v, asBtn){
+  const n = E().filter(e=>e.subject===k).length;
+  const d = document.createElement(asBtn?"button":"div");
+  d.className="scard"; if(asBtn){ d.type="button"; d.dataset.sk=k; }
+  const a = document.createElement("div"); a.className="art"; a.style.setProperty("--ac", v.c);
+  if(simgs[k]){ a.classList.add("img"); a.style.backgroundImage=`url("${simgs[k]}")`; }
+  else { const g=document.createElement("span"); g.className="glyph"; g.textContent=v.g||glyphOf(v.n); a.appendChild(g); }
+  d.style.setProperty("--ac", v.c);
+  d.appendChild(a);
+  const l=document.createElement("div"); l.className="sl";
+  l.innerHTML=`<b>${esc(v.n)}</b><small>${n} ${n===1?"evento":"eventos"}</small>`;
+  d.appendChild(l); return d;
 }
-
-/* ---------- Render principal ---------- */
+function renderSubjects(){
+  const ks=Object.keys(cal().subjects||{}), box=$("subjList");
+  if(!ks.length){ box.innerHTML='<div class="empty">Sin materias. Añádelas desde Calendarios → Editar.</div>'; $("subjPos").textContent=""; $("subjAllBtn").hidden=true; return; }
+  $("subjAllBtn").hidden=false;
+  subjIdx = ((subjIdx%ks.length)+ks.length)%ks.length;
+  const k=ks[subjIdx];
+  box.innerHTML='<div class="scar"><button type="button" data-sd="-1" aria-label="Materia anterior">‹</button><div id="subjCur"></div><button type="button" data-sd="1" aria-label="Materia siguiente">›</button></div>';
+  $("subjCur").appendChild(subjCard(k, cal().subjects[k], false));
+  $("subjPos").textContent = `${subjIdx+1} / ${ks.length}`;
+}
+$("subjList").onclick = e=>{ const b=e.target.closest("[data-sd]"); if(!b) return; subjIdx+=+b.dataset.sd; renderSubjects(); };
+$("subjAllBtn").onclick = ()=>{
+  const host=$("subjAll"); host.innerHTML="";
+  const subs=cal().subjects||{};
+  Object.keys(subs).forEach(k=>host.appendChild(subjCard(k,subs[k],true)));
+  $("subjDlg").showModal();
+};
+$("subjAll").onclick = e=>{ const c=e.target.closest("[data-sk]"); if(!c) return; subjIdx=Object.keys(cal().subjects||{}).indexOf(c.dataset.sk); renderSubjects(); $("subjDlg").close(); };
+$("subjAllClose").onclick = ()=>$("subjDlg").close();
 function render(){
   const c=cal(), [y,m] = MONTHS[cur];
   $("monthTitle").textContent = `${NAMES[m]} ${y}`;
@@ -876,7 +1277,7 @@ function render(){
   }
   const grid=$("grid"); grid.innerHTML=html;
   grid.querySelectorAll(".day:not(.out)").forEach(d=>d.onclick=()=>{ selId=null; openView(d.dataset.date); });
-  renderUpcoming(); renderProgress();
+  renderUpcoming(); renderProgress(); renderSubjects();
 }
 
 function renderProgress(){
@@ -886,6 +1287,11 @@ function renderProgress(){
   const total=dayNum(c.end,c)-dayNum(c.start,c)+1, raw=dayNum(today,c)-dayNum(c.start,c)+1;
   const el=Math.max(0,Math.min(total,raw)), pc=Math.round(el/total*100);
   const state = raw<1 ? "Aún no empieza" : raw>total ? "Terminado" : `Día ${el} de ${total}`;
+  if(ui.prog==="ring"){
+    const R=40, C=2*Math.PI*R, ring=(p,t)=>`<div class="ringb"><div class="ring"><svg viewBox="0 0 100 100"><circle class="tr" cx="50" cy="50" r="${R}"/><circle class="fg" cx="50" cy="50" r="${R}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-p/100)).toFixed(1)}"/></svg><span>${p}%</span></div><div>${t}</div></div>`;
+    box.innerHTML=`<div class="rings">${ring(py,`Año ${y}<br>día ${dn} de ${yl}`)}${ring(pc,`${esc(c.name)}<br>${state}`)}</div>`;
+    return;
+  }
   box.innerHTML =
     `<div class="pl">Año ${y} (${yl} días): día ${dn} · ${py}%</div><div class="bar"><i style="width:${py}%"></i></div>`+
     `<div class="pl">${esc(c.name)}: ${state} · ${pc}%</div><div class="bar" style="margin-bottom:0"><i style="width:${pc}%"></i></div>`;
@@ -933,7 +1339,7 @@ function detailHTML(e){
     <div class="drng">${rng}</div>
     <p class="desc ${e.note?"":"muted"}">${e.note?esc(e.note):"Sin descripción todavía."}</p>
     ${showD?`<div class="diff" style="${dc(e.diff)}">
-      <div class="dh"><span class="lbl">Dificultad</span>${stars(e.diff,e.id)}<span class="dname">${e.diff?`${e.diff}/5 · ${DIFF[e.diff]}`:"Sin asignar"}</span></div>
+      <div class="dh"><span class="lbl">Dificultad</span><span class="dwid">${diffWidget(e.diff,e.id)}</span><span class="dname">${e.diff?`${e.diff}/5 · ${DIFF[e.diff]}`:"Sin asignar"}</span></div>
       <p class="why ${e.diffNote?"":"muted"}">${e.diffNote?esc(e.diffNote):"Sin explicación de la dificultad."}</p>
     </div>`:""}`;
 }
@@ -955,6 +1361,8 @@ function showSel(anim){
   $("vTiles").querySelectorAll(".tile").forEach(t=>t.classList.toggle("sel", t.dataset.tile===selId));
   const st=$("vTiles").querySelector(".sel"); if(st && anim) st.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"});
   $("vEdit").hidden = !sel;
+  const pn=$("vPn"), many=evs.length>1;
+  pn.innerHTML = many ? `<button type="button" data-pn="-1">◀ LB</button><span class="pdots">${evs.map(x=>`<i data-pi="${x.id}" class="${x.id===selId?"on":""}"></i>`).join("")}</span><button type="button" data-pn="1">RB ▶</button>` : "";
   setArt(sel);
 }
 function openView(date){
@@ -981,6 +1389,11 @@ $("vMain").onclick = e=>{
   const n = +s.dataset.star; ev.diff = ev.diff===n?0:n;
   save(); render(); showSel(false);
 };
+$("vPn").onclick = e=>{
+  const b=e.target.closest("[data-pn]"), i=e.target.closest("[data-pi]");
+  if(b) stepSel(+b.dataset.pn); else if(i){ selId=i.dataset.pi; showSel(true); }
+};
+dayEl.addEventListener("click", e=>{ if(e.target===dayEl) closeView(); });
 $("vTiles").onclick = e=>{
   const t=e.target.closest("[data-tile]"); if(!t) return;
   selId=t.dataset.tile; showSel(true);
@@ -996,7 +1409,7 @@ document.addEventListener("keydown", e=>{
 
 /* ---------- Crear / editar evento ---------- */
 function drawFormStars(){
-  $("fStars").innerHTML = stars(formDiff,"").replace(/^<span class="stars">|<\/span>$/g,"");
+  $("fStars").innerHTML = diffWidget(formDiff,"");
   $("fStars").style.setProperty("--dc", DCOL[formDiff]||"#fff");
   $("fDiffName").style.setProperty("--dc", DCOL[formDiff]||"#7b8aa5");
   $("fDiffName").textContent = formDiff ? `${formDiff}/5 · ${DIFF[formDiff]}` : "Sin asignar";
@@ -1227,66 +1640,296 @@ $("bgFile").onchange=e=>{
   shrink(f,1600,.8,d=>{ bg=d; applyBg(); save(); toast("Fondo aplicado"); });
 };
 
-/* ---------- Panel de estilos ---------- */
+/* ---------- Fondo propio de la pantalla de estilos ---------- */
+function applySbg(){
+  const a = $("styArtIn");
+  a.style.backgroundImage = sbg ? `url("${sbg}")` : "";
+  a.classList.toggle("img", !!sbg);
+  $("sty").classList.toggle("hasimg", !!sbg);
+  $("sbgClear").hidden = !sbg;
+  syncStyleUI();
+}
+$("sbgBtn").onclick = ()=>$("sbgFile").click();
+$("sbgClear").onclick = ()=>{ sbg=""; applySbg(); save(); toast("Fondo de Estilos quitado"); };
+$("sbgFile").onchange = e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  shrink(f,1600,.8,d=>{ sbg=d; applySbg(); save(); toast("Fondo de Estilos aplicado"); });
+};
+$("rSbg").oninput = ()=>{ ui.sbgLight=+$("rSbg").value; applyStyle(); syncStyleUI(); };
+$("rSbg").onchange = save;
+
+/* ---------- Pantalla de estilos ---------- */
 $("swatches").innerHTML = Object.entries(THEMES).map(([k,t])=>`<button type="button" data-k="${k}" title="${t.n}" aria-label="${t.n}" style="--c:${t.sw||t.a}"></button>`).join("");
 $("swatches").onclick = e=>{ const b=e.target.closest("[data-k]"); if(!b) return; ui.theme=b.dataset.k; if(THEMES[ui.theme].force) ui.text=THEMES[ui.theme].force; applyStyle(); syncStyleUI(); save(); };
 $("segText").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; ui.text=b.dataset.v; applyStyle(); syncStyleUI(); save(); };
 $("segLayout").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; ui.layout=b.dataset.v; applyStyle(); syncStyleUI(); save(); };
+$("segProg").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; ui.prog=b.dataset.v; syncStyleUI(); renderProgress(); save(); };
+$("segEvs").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; ui.evs=b.dataset.v; applyStyle(); syncStyleUI(); save(); };
+$("segDiff").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; ui.diff=b.dataset.v; syncStyleUI(); save(); drawFormStars(); if(dayOpen()) showSel(false); };
 $("segView").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; ui.view=b.dataset.v; syncStyleUI(); render(); save(); };
 rPa.oninput = ()=>{ ui.alpha=+rPa.value; applyStyle(); syncStyleUI(); };
 rPa.onchange = save;
 rBg.oninput = ()=>{ ui.bgLight=+rBg.value; applyStyle(); syncStyleUI(); };
 rBg.onchange = save;
 $("stReset").onclick = ()=>{
-  if(!confirm("¿Restablecer todos los estilos? (los eventos y el fondo no se tocan)")) return;
+  if(!confirm("¿Restablecer todos los estilos, incluidos los paneles y su ubicación? (los eventos y los fondos no se tocan)")) return;
   ui = normUI(); applyStyle(); syncStyleUI(); render(); save(); toast("Estilos restablecidos");
 };
-$("styleBtn").onclick = ()=>{ syncStyleUI(); styleDlg.showModal(); };
-$("stClose").onclick = ()=>styleDlg.close();
-styleDlg.addEventListener("click", e=>{ if(e.target===styleDlg) styleDlg.close(); });
-
-/* ---------- Exportar / Importar ---------- */
-$("exportBtn").onclick=()=>{
-  /* "events" (del calendario activo) se incluye también para que la versión anterior pueda leer este archivo */
-  const out={version:5,exportado:new Date().toISOString(),calendars,active:activeId,events:E(),bg,simgs,style:ui};
-  const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="calendario-eventos.json"; a.click();
-  URL.revokeObjectURL(a.href); toast("Exportado");
+$("tplPick").onclick = e=>{ const b=e.target.closest("[data-t]"); if(!b) return; ui.tpl=b.dataset.t; applyStyle(); syncStyleUI(); save(); };
+$("panelRows").onclick = e=>{
+  const row=e.target.closest("[data-p]"); if(!row) return; const p=row.dataset.p;
+  const t=e.target.closest("button"); if(!t || t.disabled) return;
+  if(t.dataset.act==="show") ui.show[p]=!ui.show[p];
+  else if(t.dataset.z) ui.zone[p]=t.dataset.z;
+  else if(t.dataset.mv) movePanel(p,+t.dataset.mv);
+  else return;
+  applyStyle(); syncStyleUI(); save();
 };
-$("importBtn").onclick=()=>$("importFile").click();
-$("importFile").onchange=e=>{
+const styEl=$("sty"), styOpen=()=>styEl.classList.contains("open");
+function openSty(){ syncStyleUI(); styEl.classList.add("open"); document.body.classList.add("noscroll"); styEl.querySelector(".sbody").scrollTop=0; }
+function closeSty(){ styEl.classList.remove("open"); document.body.classList.remove("noscroll"); }
+$("styleBtn").onclick = openSty;
+$("stClose").onclick = $("stDone").onclick = closeSty;
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape" && styOpen() && !document.querySelector("dialog[open]")) closeSty();
+});
+
+/* ---------- Exportar / Importar (por partes) ---------- */
+const PARTS = {
+  calendarios:{n:"Calendarios", d:"Nombre, fechas, año bisiesto y materias (sin eventos)"},
+  eventos:{n:"Eventos", d:"Todos los eventos de los calendarios elegidos"},
+  estilos:{n:"Estilos", d:"Color, letra, opacidad, diseño, vista de eventos y paneles (qué se ve y dónde)"},
+  fondo:{n:"Fondo", d:"Las imágenes de fondo (calendario y pantalla de Estilos)", none:"No hay ningún fondo puesto"},
+  imagenes:{n:"Imágenes de materias", d:"Las imágenes personalizadas de cada materia", none:"No hay imágenes personalizadas"}
+};
+const PKEYS = Object.keys(PARTS);
+const slug = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "calendario";
+const okImg = s => typeof s==="string" && /^data:image\/[\w.+-]+;base64,[A-Za-z0-9+/=]+$/.test(s);
+const plural = (n,a,b) => `${n} ${n===1?a:b}`;
+const xfDlg = $("xfDlg");
+let xfTab = "exp", xSep = false, impInfo = null, impMode = "merge";
+
+function dl(obj,name){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function openXf(tab){
+  xfTab = tab;
+  drawExp(); impInfo=null; $("iName").textContent=""; drawImp();
+  syncXfTab();
+  if(!xfDlg.open) xfDlg.showModal();
+}
+function syncXfTab(){
+  $("xfTabs").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.t===xfTab));
+  $("xfExp").hidden = xfTab!=="exp"; $("xfImp").hidden = xfTab!=="imp";
+  $("xfTitle").textContent = xfTab==="exp" ? "Exportar" : "Importar";
+}
+$("xfTabs").onclick = e=>{ const b=e.target.closest("[data-t]"); if(!b) return; xfTab=b.dataset.t; syncXfTab(); };
+$("exportBtn").onclick = ()=>openXf("exp");
+$("importBtn").onclick = ()=>openXf("imp");
+$("xfClose").onclick = $("xfClose2").onclick = ()=>xfDlg.close();
+
+/* ----- Exportar ----- */
+const partAvail = p => p==="fondo" ? !!(bg||sbg) : p==="imagenes" ? Object.keys(simgs).length>0 : true;
+function drawExp(){
+  $("xCals").innerHTML = calendars.map(c=>`<label class="ck"><input type="checkbox" data-xc="${esc(c.id)}" checked><span>${esc(c.name)}${c.id===activeId?'<span class="badge">Activo</span>':""}<small>${longRange(c)} · ${plural(c.events.length,"evento","eventos")}</small></span></label>`).join("");
+  $("xParts").innerHTML = PKEYS.map(p=>{
+    const a=partAvail(p);
+    return `<label class="ck ${a?"":"dis"}"><input type="checkbox" data-xp="${p}" ${a?"checked":"disabled"}><span>${PARTS[p].n}<small>${a?PARTS[p].d:PARTS[p].none}</small></span></label>`;
+  }).join("");
+  $("xMode").querySelectorAll("button").forEach(b=>b.classList.toggle("on",(b.dataset.v==="sep")===xSep));
+  syncExp();
+}
+function syncExp(){
+  const on=["calendarios","eventos"].some(p=>$("xParts").querySelector(`[data-xp="${p}"]`).checked);
+  $("xCals").querySelectorAll("input").forEach(x=>{ x.disabled=!on; x.closest(".ck").classList.toggle("dis",!on); });
+  $("xCalLbl").style.opacity = on ? 1 : .45;
+}
+$("xParts").onchange = syncExp;
+$("xMode").onclick = e=>{ const b=e.target.closest("[data-v]"); if(!b) return; xSep=b.dataset.v==="sep"; $("xMode").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b)); };
+
+function buildExport(parts, ids){
+  const out={version:6,exportado:new Date().toISOString(),partes:parts.slice()};
+  const has=p=>parts.includes(p);
+  if(has("calendarios")||has("eventos")){
+    out.calendars = calendars.filter(c=>ids.includes(c.id)).map(c=>{
+      const o={id:c.id,name:c.name};
+      if(has("calendarios")){ o.start=c.start; o.end=c.end; o.leap=c.leap; o.subjects=c.subjects; }
+      if(has("eventos")) o.events=c.events;
+      return o;
+    });
+    if(ids.includes(activeId)) out.active=activeId;
+  }
+  if(has("estilos")) out.style=ui;
+  if(has("fondo")){ out.bg=bg; if(sbg) out.sbg=sbg; }
+  if(has("imagenes")) out.simgs=simgs;
+  /* en la exportación completa se incluye también "events" (calendario activo) por compatibilidad con la versión anterior */
+  if(PKEYS.every(has) && ids.length===calendars.length) out.events=E();
+  return out;
+}
+function doExport(all){
+  let parts, ids;
+  if(all){ parts=[...PKEYS]; ids=calendars.map(c=>c.id); }
+  else{
+    parts=[...$("xParts").querySelectorAll("[data-xp]:checked")].map(x=>x.dataset.xp);
+    ids=[...$("xCals").querySelectorAll("[data-xc]:checked")].map(x=>x.dataset.xc);
+    if(!parts.length){ toast("Elige qué exportar"); return; }
+    if((parts.includes("calendarios")||parts.includes("eventos")) && !ids.length){ toast("Elige al menos un calendario"); return; }
+  }
+  if(all){ dl(buildExport(parts,ids),"calendario-todo.json"); toast("Exportado todo"); return; }
+  const sel=calendars.filter(c=>ids.includes(c.id));
+  const one=sel.length===1 ? "-"+slug(sel[0].name) : "";
+  const fname = p => `calendario-${p}${["calendarios","eventos"].includes(p)?one:""}.json`;
+  if(xSep && parts.length>1){
+    parts.forEach((p,k)=>setTimeout(()=>dl(buildExport([p],ids),fname(p)),k*350));
+    toast(`Exportando ${parts.length} archivos`);
+  }else{
+    const onlyCal = parts.every(p=>["calendarios","eventos"].includes(p));
+    const name = parts.length===1 ? fname(parts[0]) : (onlyCal && sel.length===1 ? `calendario${one}.json` : "calendario-seleccion.json");
+    dl(buildExport(parts,ids),name); toast("Exportado");
+  }
+}
+$("xAll").onclick = ()=>doExport(true);
+$("xGo").onclick = ()=>doExport(false);
+
+/* ----- Importar ----- */
+function detectFile(p){
+  const i={cals:[],legacy:null,style:null,bg:"",sbg:"",simgs:null,active:null,parts:[]};
+  const badEv = l => !Array.isArray(l) || !l.every(x=>x && typeof x==="object" && isDateStr(x.start) && x.title && x.type);
+  if(Array.isArray(p)){ if(badEv(p)) throw 0; i.legacy=p; }
+  else if(p && typeof p==="object"){
+    if(Array.isArray(p.calendars)){
+      p.calendars.forEach((c,idx)=>{
+        if(!c || typeof c!=="object") return;
+        const struct=isDateStr(c.start) && isDateStr(c.end);
+        const events=Array.isArray(c.events) ? c.events : null;
+        if(events && badEv(events)) throw 0;
+        if(!struct && !events) return;
+        i.cals.push({idx,id:c.id?String(c.id):"imp"+idx+Date.now().toString(36),name:String(c.name||"Calendario").slice(0,60),struct,events,raw:c});
+      });
+      i.active = p.active ? String(p.active) : null;
+    }else if(Array.isArray(p.events)){ if(badEv(p.events)) throw 0; i.legacy=p.events; }
+    if(p.style && typeof p.style==="object") i.style=p.style;
+    if(okImg(p.bg)) i.bg=p.bg;
+    if(okImg(p.sbg)) i.sbg=p.sbg;
+    if(p.simgs && typeof p.simgs==="object"){
+      const o={};
+      for(const [k,v] of Object.entries(p.simgs)) if(okImg(v)) o[String(k).replace(/[^\w-]/g,"").slice(0,40)]=v;
+      if(Object.keys(o).length) i.simgs=o;
+    }
+  }else throw 0;
+  if(i.cals.some(c=>c.struct)) i.parts.push("calendarios");
+  if(i.legacy || i.cals.some(c=>c.events)) i.parts.push("eventos");
+  if(i.style) i.parts.push("estilos");
+  if(i.bg || i.sbg) i.parts.push("fondo");
+  if(i.simgs) i.parts.push("imagenes");
+  if(!i.parts.length) throw 0;
+  return i;
+}
+function drawImp(){
+  const i=impInfo, box=$("iBody");
+  $("iEmpty").style.display = i ? "none" : "";
+  if(!i){ box.innerHTML=""; return; }
+  const nEv = i.cals.reduce((a,c)=>a+(c.events?c.events.length:0),0)+(i.legacy?i.legacy.length:0);
+  const det = {
+    calendarios: plural(i.cals.filter(c=>c.struct).length,"calendario","calendarios"),
+    eventos: plural(nEv,"evento","eventos"),
+    estilos: PARTS.estilos.d,
+    fondo: PARTS.fondo.d,
+    imagenes: i.simgs ? plural(Object.keys(i.simgs).length,"imagen","imágenes") : ""
+  };
+  let h=`<label>Qué importar</label>`+i.parts.map(p=>`<label class="ck"><input type="checkbox" data-p="${p}" checked><span>${PARTS[p].n}<small>${det[p]}</small></span></label>`).join("");
+  const showCals = i.cals.length && (i.parts.includes("calendarios")||i.parts.includes("eventos"));
+  if(showCals){
+    h+=`<label id="iCalLbl">Calendarios del archivo</label><div id="iCals">`+i.cals.map(c=>`<label class="ck"><input type="checkbox" data-ci="${c.idx}" checked><span>${esc(c.name)}<small>${[c.struct?"estructura":"",c.events?plural(c.events.length,"evento","eventos"):""].filter(Boolean).join(" · ")}</small></span></label>`).join("")+`</div>`;
+  }
+  if(i.parts.includes("eventos")){
+    h+=`<p class="note" style="margin-top:8px">Los eventos van al calendario con el mismo origen. Si no lo tienes (y no importas ese calendario), irán al calendario activo «${esc(cal().name)}»; sus materias se quedan sin asignar si no existen allí.</p>`;
+  }
+  h+=`<label>Al importar</label><div class="seg" id="iMode"><button type="button" data-v="merge">Fusionar con lo que tengo</button><button type="button" data-v="replace">Reemplazar</button></div>
+    <p class="note" id="iModeNote" style="margin-top:6px"></p>
+    <div class="actions"><button type="button" id="xfClose3">Cerrar</button><button type="button" class="primary" id="iGo">Importar selección</button></div>`;
+  box.innerHTML=h;
+  syncImp();
+  $("xfClose3").onclick=()=>xfDlg.close();
+  $("iGo").onclick=doImport;
+}
+function syncImp(){
+  const box=$("iBody");
+  const on=["calendarios","eventos"].some(p=>{ const x=box.querySelector(`[data-p="${p}"]`); return x && x.checked; });
+  box.querySelectorAll("[data-ci]").forEach(x=>{ x.disabled=!on; x.closest(".ck").classList.toggle("dis",!on); });
+  const lbl=$("iCalLbl"); if(lbl) lbl.style.opacity = on?1:.45;
+  const m=$("iMode"); if(!m) return;
+  m.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===impMode));
+  $("iModeNote").textContent = impMode==="merge"
+    ? "Añade lo nuevo y actualiza lo que ya existe (mismo calendario o mismo evento). No borra nada de lo que tienes."
+    : "Lo que tengas de cada parte elegida se sustituye por lo del archivo.";
+}
+$("iBody").onchange = syncImp;
+$("iBody").onclick = e=>{ const b=e.target.closest("#iMode [data-v]"); if(!b) return; impMode=b.dataset.v; syncImp(); };
+$("iPick").onclick = ()=>$("importFile").click();
+$("importFile").onchange = e=>{
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
   r.onload=()=>{
-    try{
-      const p=JSON.parse(r.result);
-      const multi = !Array.isArray(p) && p && Array.isArray(p.calendars) && p.calendars.length;
-      if(multi){
-        const d=fromData(p);
-        if(!d.calendars.every(c=>c.events.every(x=>x.start&&x.title&&x.type))) throw 0;
-        if(confirm("Esto reemplazará todos tus calendarios actuales. ¿Continuar?")){
-          calendars=d.calendars; activeId=d.active; bg=d.bg; simgs=d.simgs; ui=d.ui;
-          applyStyle(); applyBg(); setCal(activeId); toast("Importado");
-        }
-      }else{
-        /* JSON de la versión anterior: solo eventos (+ fondo/imágenes/estilos si venían) */
-        const list = Array.isArray(p) ? p : p.events;
-        if(!Array.isArray(list)||!list.every(x=>x.start&&x.title&&x.type)) throw 0;
-        if(confirm(`Este archivo es del formato anterior. Se reemplazarán los eventos del calendario «${cal().name}». ¿Continuar?`)){
-          cal().events=list.map(norm);
-          if(!Array.isArray(p)){
-            if(p.bg) bg=p.bg;
-            if(p.simgs) simgs={...simgs,...p.simgs};
-            if(p.style) ui=normUI(p.style);
-          }
-          applyStyle(); applyBg(); render(); save(); toast("Importado");
-        }
-      }
-    }catch(_){ toast("Archivo no válido"); }
-    e.target.value="";
+    try{ impInfo=detectFile(JSON.parse(r.result)); $("iName").textContent=f.name; }
+    catch(_){ impInfo=null; $("iName").textContent=""; toast("Archivo no válido"); }
+    drawImp();
   };
-  r.readAsText(f);
+  r.readAsText(f); e.target.value="";
 };
+function doImport(){
+  const i=impInfo; if(!i) return;
+  const box=$("iBody");
+  const parts=new Set([...box.querySelectorAll("[data-p]:checked")].map(x=>x.dataset.p));
+  const sel=new Set([...box.querySelectorAll("[data-ci]:checked")].map(x=>+x.dataset.ci));
+  const replace = impMode==="replace";
+  if(!parts.size){ toast("Elige qué importar"); return; }
+  const wantStruct=parts.has("calendarios"), wantEv=parts.has("eventos");
+  if((wantStruct||wantEv) && i.cals.length && !sel.size && !(wantEv && i.legacy)){ toast("Elige al menos un calendario"); return; }
+  if(replace && !confirm(`Se reemplazará lo que tienes de: ${[...parts].map(p=>PARTS[p].n.toLowerCase()).join(", ")}. ¿Continuar?`)) return;
+
+  const picked=i.cals.filter(c=>sel.has(c.idx));
+  if(wantStruct){
+    const withS=picked.filter(c=>c.struct);
+    if(replace && withS.length){
+      const old=calendars;
+      calendars=withS.map(c=>{
+        const ex=old.find(x=>x.id===c.id);
+        return normCal({...c.raw,id:c.id,events:ex?ex.events:[]});
+      });
+      if(!calendars.some(c=>c.id===activeId)) activeId = i.active && calendars.some(c=>c.id===i.active) ? i.active : calendars[0].id;
+    }else{
+      withS.forEach(c=>{
+        const n=normCal({...c.raw,id:c.id,events:[]}), ex=calendars.find(x=>x.id===c.id);
+        if(ex){ Object.assign(ex,{name:n.name,start:n.start,end:n.end,leap:n.leap}); ex.subjects=replace?n.subjects:{...ex.subjects,...n.subjects}; }
+        else calendars.push(n);
+      });
+    }
+  }
+  if(wantEv){
+    const put=(t,list,rep)=>{
+      const ns=list.map(norm);
+      if(rep) t.events=ns;
+      else ns.forEach(n=>{ const k=t.events.findIndex(x=>x.id===n.id); if(k>=0) t.events[k]=n; else t.events.push(n); });
+    };
+    const act=calendars.find(c=>c.id===activeId)||calendars[0];
+    picked.forEach(c=>{
+      if(!c.events) return;
+      const t=calendars.find(x=>x.id===c.id);
+      if(t) put(t,c.events,replace); else put(act,c.events,false);
+    });
+    if(i.legacy) put(act,i.legacy,replace);
+  }
+  if(parts.has("estilos") && i.style){ ui=normUI(i.style); applyStyle(); }
+  if(parts.has("fondo")){ if(i.bg){ bg=i.bg; applyBg(); } if(i.sbg){ sbg=i.sbg; applySbg(); } }
+  if(parts.has("imagenes") && i.simgs) simgs = replace ? {...i.simgs} : {...simgs,...i.simgs};
+  calendars.forEach(c=>c.events.forEach(ev=>{ if(ev.subject && !c.subjects[ev.subject]) ev.subject=""; }));
+  setCal(activeId,true); syncStyleUI();
+  xfDlg.close(); impInfo=null; toast("Importado");
+}
 
 /* ---------- Horario escolar (misma estética que la ventana de un evento) ---------- */
 const SCHED=[
@@ -1393,7 +2036,7 @@ document.addEventListener("keydown",e=>{
 
 /* ---------- Inicio ---------- */
 computeMonths(); pickMonth();
-applyStyle(); applyBg(); renderHeader(); renderSubjects(); render();
+applyStyle(); applyBg(); applySbg(); renderHeader(); renderSubjects(); render();
 askToday();
 </script>
 </body>
